@@ -102,7 +102,7 @@ textarea {
   display: none;
 }
 
-#text-field {
+#text-field, #front-field, #back-field {
   display: block;
 }
 

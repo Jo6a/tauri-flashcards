@@ -11,7 +11,7 @@
         <li id="menu-button">☰</li>
         <li id="main-view-button" class="active">Studying</li>
         <li>Decks</li>
-        <li>Add Cards</li>
+        <li id="add-card-button">Add Cards</li>
         <li id="options-button">Options</li>
       </ul>
     </div>
@@ -21,7 +21,13 @@
       <textarea id="text-field-2" readonly></textarea>
       <button id="wrong-button">Wrong</button>
     </div>
-    <div id="options-view">
+    <div id="add-card-view" style="display: none;">
+      <h1>Add Card</h1>
+      <textarea id="front-field" placeholder="Front"></textarea>
+      <textarea id="back-field" placeholder="Back"></textarea>
+      <button id="add-button">Add</button>
+    </div>
+    <div id="options-view" style="display: none;">
       <h1>Optionen</h1>
       <button id="theme-button">Zum Hellmodus wechseln</button>
     </div>

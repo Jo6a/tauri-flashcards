@@ -1,0 +1,120 @@
+body.dark-mode {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #333;
+  color: white;
+  transition: margin-left 0.3s;
+  min-height: 100vh;
+}
+
+body.light-mode {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f0f0f0;
+  color: black;
+  transition: margin-left 0.3s;
+}
+
+#menu-button {
+  cursor: pointer;
+  font-size: 30px;
+  position: fixed;
+  left: 10px;
+  top: 10px;
+  z-index: 1;
+}
+
+body.dark-mode #menu-button {
+  color: white;
+}
+
+body.light-mode #menu-button {
+  color: black;
+}
+
+#sidebar {
+  position: fixed;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  padding: 20px;
+  transition: left 0.3s;
+  box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.2);
+}
+
+body.dark-mode #sidebar {
+  background-color: #333;
+  color: white;
+}
+
+body.light-mode #sidebar {
+  background-color: #ddd;
+  color: black;
+}
+
+#sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+#sidebar ul li {
+  padding: 10px 0;
+  transition: background-color 0.3s;
+}
+
+#sidebar ul li:hover {
+  background-color: #444;
+}
+
+#sidebar ul li.active {
+  background-color: #007BFF;
+  color: white;
+}
+
+#main-content {
+  margin-left: 0;
+  transition: margin-left 0.3s;
+}
+
+textarea, button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+}
+
+body.dark-mode textarea, body.dark-mode button {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  background-color: #555;
+  color: white;
+}
+
+body.light-mode textarea, body.light-mode button {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  color: black;
+}
+
+textarea {
+  height: 200px;
+  display: none;
+}
+
+#text-field {
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  background-color: #007BFF;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#options-view {
+  display: none;
+}

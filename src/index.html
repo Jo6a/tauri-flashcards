@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello Tauri</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="dark-mode">
+    <div id="sidebar">
+      <ul>
+        <li id="menu-button">☰</li>
+        <li id="main-view-button" class="active">Studying</li>
+        <li>Decks</li>
+        <li>Add Cards</li>
+        <li id="options-button">Options</li>
+      </ul>
+    </div>
+    <div id="main-content">
+      <textarea id="text-field" readonly></textarea>
+      <button id="show-button">Show solution</button>
+      <textarea id="text-field-2" readonly></textarea>
+      <button id="wrong-button">Wrong</button>
+    </div>
+    <div id="options-view">
+      <h1>Optionen</h1>
+      <button id="theme-button">Zum Hellmodus wechseln</button>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

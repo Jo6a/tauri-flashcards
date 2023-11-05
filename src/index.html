@@ -10,7 +10,7 @@
       <ul>
         <li id="menu-button">☰</li>
         <li id="main-view-button" class="active">Studying</li>
-        <li>Decks</li>
+        <li id="decks-button">Decks</li>
         <li id="add-card-button">Add Cards</li>
         <li id="options-button">Options</li>
       </ul>
@@ -21,6 +21,10 @@
       <textarea id="text-field-2" readonly></textarea>
       <button id="wrong-button">Wrong</button>
     </div>
+    <div id="decks-view" style="display: none;">
+      <h1>Decks</h1>
+      <ul id="deck-list"></ul>
+    </div>
     <div id="add-card-view" style="display: none;">
       <h1>Add Card</h1>
       <textarea id="front-field" placeholder="Front"></textarea>
@@ -28,8 +32,8 @@
       <button id="add-button">Add</button>
     </div>
     <div id="options-view" style="display: none;">
-      <h1>Optionen</h1>
-      <button id="theme-button">Zum Hellmodus wechseln</button>
+      <h1>Options</h1>
+      <button id="theme-button">Light Mode</button>
     </div>
     <script src="script.js"></script>
   </body>

@@ -118,3 +118,27 @@ button:hover {
 #options-view {
   display: none;
 }
+
+#decks-view {
+  display: block;
+}
+
+#deck-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+#deck-list li {
+  padding: 10px 0;
+  transition: background-color 0.3s;
+}
+
+#deck-list li:hover {
+  background-color: #444;
+}
+
+#deck-list li.active {
+  background-color: #007BFF;
+  color: white;
+}
+

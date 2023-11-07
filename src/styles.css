@@ -32,6 +32,11 @@ body.light-mode #menu-button {
   color: black;
 }
 
+#selected-deck {
+  color: #007BFF;
+  font-size: 24px;
+}
+
 #sidebar {
   position: fixed;
   left: -250px;

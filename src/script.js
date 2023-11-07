@@ -60,10 +60,20 @@ document.getElementById('menu-button').onclick = function() {
     deckList.innerHTML = '';
     for (const deck of deckNames) {
         const listItem = document.createElement('li');
+        questionName = ""
+        if (deck.cards.length > 0) {
+            questionName = deck.cards[0].question;
+        }
         console.log(deck.name);
-        listItem.textContent = deck.name;
+        console.log(questionName);
+
+        if (questionName != "") {
+            listItem.textContent = deck.name + " " + questionName;
+        } else {
+            listItem.textContent = deck.name;
+        }
         listItem.onclick = function() {
-          // Hier können Sie Code hinzufügen, um das ausgewählte Deck zu laden
+          document.getElementById('selected-deck').textContent = 'Current Deck: ' + deck.name;
         };
         deckList.appendChild(listItem);
       }

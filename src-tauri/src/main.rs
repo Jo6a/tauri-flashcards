@@ -40,27 +40,11 @@ fn get_text() -> String {
 
 #[tauri::command]
 fn get_deck_names() -> Vec<Deck> {
-    let mut decks = Vec::new();
-
-    // Fügen Sie hier Code hinzu, um die tatsächlichen Decknamen abzurufen
-    // Im Moment fügen wir einfach einige Beispiele hinzu
-    decks.push(Deck {
-        name: "Deck 0".to_string(),
-        cards: vec![Card {
-            question: "Q1".to_string(),
-            answer: "A1".to_string(),
-        }],
-    });
-    decks.push(Deck {
-        name: "Deck 1".to_string(),
-        cards: vec![],
-    });
-    decks.push(Deck {
-        name: "Deck 2".to_string(),
-        cards: vec![],
-    });
-
-    decks
+    let app = APP.lock().unwrap();
+    match app.load_decks() {
+        Ok(decks) => decks,
+        Err(_) => Vec::new(),
+    }
 }
 
 #[tauri::command]

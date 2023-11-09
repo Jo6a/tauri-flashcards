@@ -4,6 +4,12 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 use rusqlite::{params, Connection, Result};
+use std::sync::Mutex;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref APP: Mutex<App> = Mutex::new(App::new("database.db").unwrap());
+}
 
 #[derive(serde::Serialize)]
 pub struct Card {
@@ -57,6 +63,17 @@ fn get_deck_names() -> Vec<Deck> {
     decks
 }
 
+#[tauri::command]
+fn add_deck(deck_name: String) -> Result<(), String> {
+    println!("h1");
+    let app = APP.lock().unwrap();
+    match app.add_deck(deck_name) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
+}
+
+
 pub struct App {
     conn: Connection,
 }
@@ -85,18 +102,16 @@ impl App {
         Ok(Self { conn })
     }
 
-    pub fn add_deck(&self, deck: &Deck) -> Result<()> {
+    pub fn add_deck(&self, deck_name: String) -> Result<()> {
         self.conn.execute(
             "INSERT INTO decks (name) VALUES (?1)",
-            params![deck.name],
+            params![deck_name],
         )?;
 
-        for card in &deck.cards {
-            self.conn.execute(
-                "INSERT INTO cards (question, answer, deck_name) VALUES (?1, ?2, ?3)",
-                params![card.question, card.answer, deck.name],
-            )?;
-        }
+        self.conn.execute(
+            "INSERT INTO cards (question, answer, deck_name) VALUES (?1, ?2, ?3)",
+            params!["myQ1".to_string(), "myA1".to_string(), deck_name],
+        )?;
 
         Ok(())
     }
@@ -134,32 +149,32 @@ impl App {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
-    let app = App::new("database.db")?;
-
-    let decks = app.load_decks()?;
-    println!("{}", decks[0].name);
-
-    // Erstellen Sie einige Decks und Karten
-    let deck = Deck {
-        name: "Beispieldeck".to_string(),
-        cards: vec![
-            Card {
-                question: "Frage 1".to_string(),
-                answer: "Antwort 1".to_string(),
-            },
-            Card {
-                question: "Frage 2".to_string(),
-                answer: "Antwort 2".to_string(),
-            },
-        ],
-    };
-
-    // Fügen Sie das Deck zur Datenbank hinzu
-    app.add_deck(&deck)?;
+    //let app = APP.lock().unwrap();
+    //let decks = app.load_decks()?;
+    //if decks.len() > 0 {
+    //    println!("{}", decks[0].name);
+    //}
+//
+    //// Erstellen Sie einige Decks und Karten
+    //let deck = Deck {
+    //    name: "Beispieldeck".to_string(),
+    //    cards: vec![
+    //        Card {
+    //            question: "Frage 1".to_string(),
+    //            answer: "Antwort 1".to_string(),
+    //        },
+    //        Card {
+    //            question: "Frage 2".to_string(),
+    //            answer: "Antwort 2".to_string(),
+    //        },
+    //    ],
+    //};
+//
+    //// Fügen Sie das Deck zur Datenbank hinzu
+    //app.add_deck(&deck)?;
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_text, get_deck_names])
+        .invoke_handler(tauri::generate_handler![get_text, get_deck_names, add_deck])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 

@@ -54,6 +54,11 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('add-card-button').classList.remove('active');
   
     const { invoke } = window.__TAURI__.tauri;
+//
+    console.log('j1');
+    await invoke('add_deck', { deckName: 'myD1' });
+    console.log('j2');
+//
     const deckNames = await invoke('get_deck_names');
     console.log(deckNames);
     const deckList = document.getElementById('deck-list');

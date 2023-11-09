@@ -24,18 +24,20 @@ pub struct Deck {
 }
 
 #[tauri::command]
-fn get_text() -> String {
-    "Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n
-    Dies ist ein Beispieltext aus Rust.\n"
-        .to_string()
+fn get_card(deck_name: String) -> String {
+    println!("get_card: {}", deck_name);
+    let app = APP.lock().unwrap();
+    let decks = match app.load_decks() {
+        Ok(decks) => decks,
+        Err(_) => Vec::new(),
+    };
+    for deck in decks.iter() {
+        if deck.name == deck_name && deck.cards.len() > 0 {
+            println!("get_card2: {}", deck.cards[0].question.clone());
+            return deck.cards[0].question.clone();
+        }
+    }
+    return "".to_string();
 }
 
 #[tauri::command]
@@ -52,6 +54,16 @@ fn add_deck(deck_name: String) -> Result<(), String> {
     println!("h1");
     let app = APP.lock().unwrap();
     match app.add_deck(deck_name) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
+}
+
+#[tauri::command]
+fn add_card(deck_name: String, question: String, answer: String) -> Result<(), String> {
+    println!("h2");
+    let app = APP.lock().unwrap();
+    match app.add_card(deck_name, question, answer) {
         Ok(_) => Ok(()),
         Err(err) => Err(err.to_string()),
     }
@@ -92,10 +104,17 @@ impl App {
             params![deck_name],
         )?;
 
+        Ok(())
+    }
+
+    pub fn add_card(&self, deck_name: String, question: String, answer: String) -> Result<()> {
+        println!("add_card1: {}{}{}", deck_name, question, answer);
         self.conn.execute(
             "INSERT INTO cards (question, answer, deck_name) VALUES (?1, ?2, ?3)",
-            params!["myQ1".to_string(), "myA1".to_string(), deck_name],
+            params![question, answer, deck_name],
         )?;
+
+        println!("add_card: {}{}{}", deck_name, question, answer);
 
         Ok(())
     }
@@ -133,32 +152,8 @@ impl App {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    //let app = APP.lock().unwrap();
-    //let decks = app.load_decks()?;
-    //if decks.len() > 0 {
-    //    println!("{}", decks[0].name);
-    //}
-//
-    //// Erstellen Sie einige Decks und Karten
-    //let deck = Deck {
-    //    name: "Beispieldeck".to_string(),
-    //    cards: vec![
-    //        Card {
-    //            question: "Frage 1".to_string(),
-    //            answer: "Antwort 1".to_string(),
-    //        },
-    //        Card {
-    //            question: "Frage 2".to_string(),
-    //            answer: "Antwort 2".to_string(),
-    //        },
-    //    ],
-    //};
-//
-    //// Fügen Sie das Deck zur Datenbank hinzu
-    //app.add_deck(&deck)?;
-
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_text, get_deck_names, add_deck])
+        .invoke_handler(tauri::generate_handler![get_card, get_deck_names, add_deck, add_card])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 

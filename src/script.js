@@ -21,26 +21,16 @@ document.getElementById('menu-button').onclick = function() {
   };
 
   window.onload = async function() {
-    const { invoke } = window.__TAURI__.tauri;
-    const text = await invoke('get_text');
-    document.getElementById('text-field').value = text;
-    document.getElementById('text-field-2').value = text;
-  
-    document.getElementById('show-button').onclick = function() {
-      document.getElementById('text-field-2').style.display = 'block';
-      document.getElementById('wrong-button').style.display = 'block';
-    };
-  };
-  
-  document.getElementById('main-view-button').onclick = function() {
-    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('main-content').style.display = 'none';
     document.getElementById('options-view').style.display = 'none';
-    document.getElementById('decks-view').style.display = 'none';
-    document.getElementById('decks-button').classList.remove('active');
+    document.getElementById('decks-view').style.display = 'block';
+    document.getElementById('decks-button').classList.add('active');
     document.getElementById('add-card-view').style.display = 'none';
-    document.getElementById('add-card-button').classList.remove('active');
-    document.getElementById('main-view-button').classList.add('active');
+    document.getElementById('main-view-button').classList.remove('active');
     document.getElementById('options-button').classList.remove('active');
+    document.getElementById('add-card-button').classList.remove('active');  
+
+    await loadDecksFromBackend();
   };
 
   document.getElementById('decks-button').onclick = async function() {
@@ -51,33 +41,30 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('add-card-view').style.display = 'none';
     document.getElementById('main-view-button').classList.remove('active');
     document.getElementById('options-button').classList.remove('active');
-    document.getElementById('add-card-button').classList.remove('active');
-  
-    const { invoke } = window.__TAURI__.tauri;
-    const deckNames = await invoke('get_deck_names');
-    console.log(deckNames);
-    const deckList = document.getElementById('deck-list');
-    deckList.innerHTML = '';
-    for (const deck of deckNames) {
-        const listItem = document.createElement('li');
-        questionName = ""
-        if (deck.cards.length > 0) {
-            questionName = deck.cards[0].question;
-        }
-        console.log(deck.name);
-        console.log(questionName);
+    document.getElementById('add-card-button').classList.remove('active');  
+    
+    await loadDecksFromBackend();
+  };
 
-        if (questionName != "") {
-            listItem.textContent = deck.name + " " + questionName;
-        } else {
-            listItem.textContent = deck.name;
-        }
-        listItem.onclick = function() {
-          document.getElementById('selected-deck').textContent = 'Current Deck: ' + deck.name;
-        };
-        deckList.appendChild(listItem);
-      }
-      
+  document.getElementById('main-view-button').onclick = async function() {
+    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('options-view').style.display = 'none';
+    document.getElementById('decks-view').style.display = 'none';
+    document.getElementById('decks-button').classList.remove('active');
+    document.getElementById('add-card-view').style.display = 'none';
+    document.getElementById('add-card-button').classList.remove('active');
+    document.getElementById('main-view-button').classList.add('active');
+    document.getElementById('options-button').classList.remove('active');
+
+    const { invoke } = window.__TAURI__.tauri;
+    const text = await invoke('get_card', { deckName: document.getElementById('selected-deck').textContent });
+    document.getElementById('text-field').value = text;
+    document.getElementById('text-field-2').value = text;
+  
+    document.getElementById('show-button').onclick = function() {
+      document.getElementById('text-field-2').style.display = 'block';
+      document.getElementById('wrong-button').style.display = 'block';
+    };
   };
 
   document.getElementById('add-card-button').onclick = function() {
@@ -122,6 +109,41 @@ document.getElementById('menu-button').onclick = function() {
         await invoke('add_deck', { deckName: deck_name });
     }
   };
-  
 
+  document.getElementById('add-button').onclick = async function() {
+    deck_name = document.getElementById('new-deck').value;
+    question_text = document.getElementById('front-field').value;
+    answer_text = document.getElementById('back-field').value;
+    if (question != '') {
+        const { invoke } = window.__TAURI__.tauri;
+        await invoke('add_card', { question: question_text, answer: answer_text, deckName: deck_name });
+    }
+  };
+
+async function loadDecksFromBackend() {
+    const { invoke } = window.__TAURI__.tauri;
+    const deckNames = await invoke('get_deck_names');
+    console.log(deckNames);
+    const deckList = document.getElementById('deck-list');
+    deckList.innerHTML = '';
+    for (const deck of deckNames) {
+        const listItem = document.createElement('li');
+        questionName = "";
+        if (deck.cards.length > 0) {
+            questionName = deck.cards[0].question;
+        }
+        console.log(deck.name);
+        console.log(questionName);
+
+        if (questionName != "") {
+            listItem.textContent = deck.name + " " + questionName;
+        } else {
+            listItem.textContent = deck.name;
+        }
+        listItem.onclick = function () {
+            document.getElementById('selected-deck').textContent = deck.name;
+        };
+        deckList.appendChild(listItem);
+    }
+}
   

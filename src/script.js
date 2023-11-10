@@ -57,9 +57,9 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('options-button').classList.remove('active');
 
     const { invoke } = window.__TAURI__.tauri;
-    const text = await invoke('get_card', { deckName: document.getElementById('selected-deck').textContent });
-    document.getElementById('text-field').value = text;
-    document.getElementById('text-field-2').value = text;
+    const [question, answer] = await invoke('get_card', { deckName: document.getElementById('selected-deck').textContent });
+    document.getElementById('text-field').value = question;
+    document.getElementById('text-field-2').value = answer;
   
     document.getElementById('show-button').onclick = function() {
       document.getElementById('text-field-2').style.display = 'block';
@@ -111,12 +111,14 @@ document.getElementById('menu-button').onclick = function() {
   };
 
   document.getElementById('add-button').onclick = async function() {
-    deck_name = document.getElementById('new-deck').value;
+    deck_text = document.getElementById('selected-deck').textContent;
     question_text = document.getElementById('front-field').value;
     answer_text = document.getElementById('back-field').value;
-    if (question != '') {
+    console.log(deck_text);
+    console.log(question_text);
+    if (question_text != '') {
         const { invoke } = window.__TAURI__.tauri;
-        await invoke('add_card', { question: question_text, answer: answer_text, deckName: deck_name });
+        await invoke('add_card', { deckName: deck_text, question: question_text, answer: answer_text });
     }
   };
 
@@ -128,18 +130,7 @@ async function loadDecksFromBackend() {
     deckList.innerHTML = '';
     for (const deck of deckNames) {
         const listItem = document.createElement('li');
-        questionName = "";
-        if (deck.cards.length > 0) {
-            questionName = deck.cards[0].question;
-        }
-        console.log(deck.name);
-        console.log(questionName);
-
-        if (questionName != "") {
-            listItem.textContent = deck.name + " " + questionName;
-        } else {
-            listItem.textContent = deck.name;
-        }
+        listItem.textContent = deck.name;
         listItem.onclick = function () {
             document.getElementById('selected-deck').textContent = deck.name;
         };

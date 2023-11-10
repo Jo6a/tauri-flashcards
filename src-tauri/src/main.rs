@@ -24,7 +24,7 @@ pub struct Deck {
 }
 
 #[tauri::command]
-fn get_card(deck_name: String) -> String {
+fn get_card(deck_name: String) -> (String, String) {
     println!("get_card: {}", deck_name);
     let app = APP.lock().unwrap();
     let decks = match app.load_decks() {
@@ -34,10 +34,10 @@ fn get_card(deck_name: String) -> String {
     for deck in decks.iter() {
         if deck.name == deck_name && deck.cards.len() > 0 {
             println!("get_card2: {}", deck.cards[0].question.clone());
-            return deck.cards[0].question.clone();
+            return (deck.cards[0].question.clone(), deck.cards[0].answer.clone());
         }
     }
-    return "".to_string();
+    return ("".to_string(), "".to_string());
 }
 
 #[tauri::command]
@@ -108,15 +108,22 @@ impl App {
     }
 
     pub fn add_card(&self, deck_name: String, question: String, answer: String) -> Result<()> {
-        println!("add_card1: {}{}{}", deck_name, question, answer);
-        self.conn.execute(
+        println!("add_card1: {} {} {}", deck_name, question, answer);
+        let result = self.conn.execute(
             "INSERT INTO cards (question, answer, deck_name) VALUES (?1, ?2, ?3)",
             params![question, answer, deck_name],
-        )?;
+        );
 
-        println!("add_card: {}{}{}", deck_name, question, answer);
-
-        Ok(())
+        match result {
+            Ok(rows_affected) => {
+                println!("Successfully inserted card. Rows affected: {}", rows_affected);
+                Ok(())
+            }
+            Err(err) => {
+                eprintln!("Failed to insert card: {}", err);
+                Err(err)
+            }
+        }
     }
 
     pub fn load_decks(&self) -> Result<Vec<Deck>> {

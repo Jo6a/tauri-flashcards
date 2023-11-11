@@ -6,6 +6,7 @@
 use rusqlite::{params, Connection, Result};
 use std::sync::Mutex;
 use lazy_static::lazy_static;
+use chrono::{DateTime, Utc, Duration};
 
 lazy_static! {
     static ref APP: Mutex<App> = Mutex::new(App::new("database.db").unwrap());
@@ -15,6 +16,17 @@ lazy_static! {
 pub struct Card {
     question: String,
     answer: String,
+    schedule: ReviewSchedule 
+}
+
+#[derive(serde::Serialize)]
+pub struct ReviewSchedule {
+    next_review_at: DateTime<Utc>,
+    //interval: chrono::Duration, // Zeit bis zur nächsten Überprüfung
+    ease_factor: f32, // Schwierigkeitsgrad der Karte
+    reviews_count: u32, // Anzahl der Überprüfungen
+    successful_reviews: u32, // Anzahl der erfolgreichen Überprüfungen
+    failed_reviews: u32, // Anzahl der gescheiterten Überprüfungen
 }
 
 #[derive(serde::Serialize)]
@@ -34,7 +46,11 @@ fn get_card(deck_name: String) -> (String, String) {
     for deck in decks.iter() {
         if deck.name == deck_name && deck.cards.len() > 0 {
             println!("get_card2: {}", deck.cards[0].question.clone());
-            return (deck.cards[0].question.clone(), deck.cards[0].answer.clone());
+            if let Some(oldest_card) = deck.cards.iter().max_by_key(|card| card.schedule.next_review_at) {
+                return (oldest_card.question.clone(), oldest_card.answer.clone());
+            }
+            
+            //return (deck.cards[0].question.clone(), deck.cards[0].answer.clone());
         }
     }
     return ("".to_string(), "".to_string());
@@ -138,6 +154,14 @@ impl App {
                 Ok(Card {
                     question: row.get(0)?,
                     answer: row.get(1)?,
+                    schedule : ReviewSchedule {
+                        next_review_at: Utc::now() + Duration::days(1), // Nächste Überprüfung in 1 Tag
+                        //interval: Duration::days(1), // Startintervall ist 1 Tag
+                        ease_factor: 2.5, // Anfangs-Schwierigkeitsgrad
+                        reviews_count: 0, // Start mit 0 Überprüfungen
+                        successful_reviews: 0, // Start mit 0 erfolgreichen Überprüfungen
+                        failed_reviews: 0, // Start mit 0 gescheiterten Überprüfungen
+                    },
                 })
             })?;
 

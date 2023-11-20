@@ -1,12 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+mod review;
 
+use chrono::{DateTime, Duration, Utc};
+use lazy_static::lazy_static;
+use review::{ReviewDifficulty, ReviewSchedule};
 use rusqlite::{params, Connection, Result};
 use std::sync::Mutex;
-use lazy_static::lazy_static;
-use chrono::{DateTime, Utc, Duration};
 
 lazy_static! {
     static ref APP: Mutex<App> = Mutex::new(App::new("database.db").unwrap());
@@ -16,17 +17,7 @@ lazy_static! {
 pub struct Card {
     question: String,
     answer: String,
-    schedule: ReviewSchedule 
-}
-
-#[derive(serde::Serialize)]
-pub struct ReviewSchedule {
-    next_review_at: DateTime<Utc>,
-    //interval: chrono::Duration, // Zeit bis zur nächsten Überprüfung
-    ease_factor: f32, // Schwierigkeitsgrad der Karte
-    reviews_count: u32, // Anzahl der Überprüfungen
-    successful_reviews: u32, // Anzahl der erfolgreichen Überprüfungen
-    failed_reviews: u32, // Anzahl der gescheiterten Überprüfungen
+    schedule: ReviewSchedule,
 }
 
 #[derive(serde::Serialize)]
@@ -46,14 +37,58 @@ fn get_card(deck_name: String) -> (String, String) {
     for deck in decks.iter() {
         if deck.name == deck_name && deck.cards.len() > 0 {
             println!("get_card2: {}", deck.cards[0].question.clone());
-            if let Some(oldest_card) = deck.cards.iter().max_by_key(|card| card.schedule.next_review_at) {
+            if let Some(oldest_card) = deck
+                .cards
+                .iter()
+                .max_by_key(|card| card.schedule.next_review_at)
+            {
                 return (oldest_card.question.clone(), oldest_card.answer.clone());
             }
-            
+
             //return (deck.cards[0].question.clone(), deck.cards[0].answer.clone());
         }
     }
     return ("".to_string(), "".to_string());
+}
+
+#[tauri::command]
+fn review_card(deck_name: String, card_question: String, difficulty: String) -> Result<(), String> {
+    let app = APP.lock().unwrap();
+    let difficulty_enum = match difficulty.as_str() {
+        "wrong" => review::ReviewDifficulty::Hard,
+        "hard" => review::ReviewDifficulty::Hard,
+        "good" => review::ReviewDifficulty::Medium,
+        "easy" => review::ReviewDifficulty::Easy,
+        _ => return Err("Invalid difficulty level".to_string()),
+    };
+
+    let (deck_index, card_index) = {
+        let decks = app.load_decks().map_err(|err| err.to_string())?;
+        decks
+            .iter()
+            .enumerate()
+            .find_map(|(di, deck)| {
+                if deck.name == deck_name {
+                    deck.cards
+                        .iter()
+                        .enumerate()
+                        .find(|(_, card)| card.question == card_question)
+                        .map(|(ci, _)| (di, ci))
+                } else {
+                    None
+                }
+            })
+            .ok_or("Deck or card not found".to_string())?
+    };
+
+    let mut decks = app.load_decks().map_err(|err| err.to_string())?;
+    let deck = &mut decks[deck_index];
+    let card = &mut deck.cards[card_index];
+
+    card.schedule.review(difficulty_enum);
+
+    app.update_card_review_schedule(&deck.name, &card.question, &card.schedule)
+        .map_err(|err| err.to_string())
 }
 
 #[tauri::command]
@@ -85,7 +120,6 @@ fn add_card(deck_name: String, question: String, answer: String) -> Result<(), S
     }
 }
 
-
 pub struct App {
     conn: Connection,
 }
@@ -103,8 +137,15 @@ impl App {
 
         conn.execute(
             "CREATE TABLE IF NOT EXISTS cards (
+                card_id INTEGER PRIMARY KEY,
                 question TEXT,
                 answer TEXT,
+                next_review_at INTEGER,
+                interval INTEGER,
+                ease_factor REAL,
+                reviews_count INTEGER,
+                successful_reviews INTEGER,
+                failed_reviews INTEGER,
                 deck_name TEXT,
                 FOREIGN KEY(deck_name) REFERENCES decks(name)
             )",
@@ -115,10 +156,8 @@ impl App {
     }
 
     pub fn add_deck(&self, deck_name: String) -> Result<()> {
-        self.conn.execute(
-            "INSERT INTO decks (name) VALUES (?1)",
-            params![deck_name],
-        )?;
+        self.conn
+            .execute("INSERT INTO decks (name) VALUES (?1)", params![deck_name])?;
 
         Ok(())
     }
@@ -126,13 +165,16 @@ impl App {
     pub fn add_card(&self, deck_name: String, question: String, answer: String) -> Result<()> {
         println!("add_card1: {} {} {}", deck_name, question, answer);
         let result = self.conn.execute(
-            "INSERT INTO cards (question, answer, deck_name) VALUES (?1, ?2, ?3)",
-            params![question, answer, deck_name],
+            "INSERT INTO cards (question, answer, next_review_at, interval, ease_factor, reviews_count, successful_reviews, failed_reviews, deck_name) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![question, answer, (Utc::now() + Duration::days(1)).timestamp(), Duration::days(1).num_seconds(), 2.5, 0, 0, 0, deck_name],
         );
 
         match result {
             Ok(rows_affected) => {
-                println!("Successfully inserted card. Rows affected: {}", rows_affected);
+                println!(
+                    "Successfully inserted card. Rows affected: {}",
+                    rows_affected
+                );
                 Ok(())
             }
             Err(err) => {
@@ -149,18 +191,20 @@ impl App {
         let mut decks = Vec::new();
         for deck_name in deck_names {
             let deck_name = deck_name?;
-            let mut stmt = self.conn.prepare("SELECT question, answer FROM cards WHERE deck_name = ?1")?;
+            let mut stmt = self.conn.prepare(
+                "SELECT question, answer, next_review_at, interval, ease_factor, reviews_count, successful_reviews, failed_reviews FROM cards WHERE deck_name = ?1"
+            )?;
             let cards = stmt.query_map(params![deck_name], |row| {
                 Ok(Card {
                     question: row.get(0)?,
                     answer: row.get(1)?,
-                    schedule : ReviewSchedule {
-                        next_review_at: Utc::now() + Duration::days(1), // Nächste Überprüfung in 1 Tag
-                        //interval: Duration::days(1), // Startintervall ist 1 Tag
-                        ease_factor: 2.5, // Anfangs-Schwierigkeitsgrad
-                        reviews_count: 0, // Start mit 0 Überprüfungen
-                        successful_reviews: 0, // Start mit 0 erfolgreichen Überprüfungen
-                        failed_reviews: 0, // Start mit 0 gescheiterten Überprüfungen
+                    schedule: ReviewSchedule {
+                        next_review_at: row.get(2)?, // Datum der nächsten Überprüfung aus der Datenbank
+                        interval: row.get(3)?,       // Intervall aus der Datenbank
+                        ease_factor: row.get(4)?,    // Schwierigkeitsgrad aus der Datenbank
+                        reviews_count: row.get(5)?,  // Anzahl der Überprüfungen aus der Datenbank
+                        successful_reviews: row.get(6)?, // Anzahl der erfolgreichen Überprüfungen aus der Datenbank
+                        failed_reviews: row.get(7)?, // Anzahl der gescheiterten Überprüfungen aus der Datenbank
                     },
                 })
             })?;
@@ -179,147 +223,41 @@ impl App {
         Ok(decks)
     }
 
-    // Weitere Methoden zum Hinzufügen/Bearbeiten/Löschen von Karten...
+    pub fn update_card_review_schedule(
+        &self,
+        deck_name: &str,
+        card_question: &str,
+        schedule: &ReviewSchedule,
+    ) -> rusqlite::Result<()> {
+        self.conn.execute(
+            "UPDATE cards SET next_review_at = ?1, ease_factor = ?2, reviews_count = ?3, successful_reviews = ?4, failed_reviews = ?5 WHERE deck_name = ?6 AND question = ?7",
+            rusqlite::params![
+                schedule.next_review_at,
+                schedule.ease_factor,
+                schedule.reviews_count,
+                schedule.successful_reviews,
+                schedule.failed_reviews,
+                deck_name,
+                card_question,
+            ],
+        )?;
+
+        Ok(())
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_card, get_deck_names, add_deck, add_card])
+        .invoke_handler(tauri::generate_handler![
+            get_card,
+            get_deck_names,
+            add_deck,
+            add_card,
+            review_card
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
     Ok(())
 }
-
-/*
-1. **Deck erstellen**:
-    - Wenn ein Benutzer ein neues Deck erstellt, senden Sie die Deck-Informationen (wie den Namen des Decks) vom Frontend an Rust.
-    - Rust erstellt ein neues `Deck`-Objekt und fügt es zur Sammlung der Decks hinzu.
-
-2. **Karte hinzufügen**:
-    - Wenn ein Benutzer eine neue Karte zu einem Deck hinzufügt, senden Sie die Karteninformationen (Frage und Antwort) und den Namen des Decks vom Frontend an Rust.
-    - Rust erstellt ein neues `Card`-Objekt und fügt es zum entsprechenden `Deck` hinzu.
-
-3. **Karte bearbeiten**:
-    - Wenn ein Benutzer eine Karte bearbeitet, senden Sie die aktualisierten Karteninformationen und den Namen des Decks vom Frontend an Rust.
-    - Rust aktualisiert das entsprechende `Card`-Objekt im entsprechenden `Deck`.
-
-4. **Karte löschen**:
-    - Wenn ein Benutzer eine Karte löscht, senden Sie die Karteninformationen und den Namen des Decks vom Frontend an Rust.
-    - Rust entfernt das entsprechende `Card`-Objekt aus dem entsprechenden `Deck`.
-
-5. **Deck anzeigen**:
-    - Wenn ein Benutzer ein Deck anzeigen möchte, senden Sie den Namen des Decks vom Frontend an Rust.
-    - Rust sendet die Informationen des entsprechenden `Deck`-Objekts (einschließlich aller `Card`-Objekte) zurück an das Frontend.
-
-6. **Alle Decks anzeigen**:
-    - Wenn ein Benutzer alle Decks anzeigen möchte, senden Sie eine Anfrage vom Frontend an Rust.
-    - Rust sendet die Informationen aller `Deck`-Objekte zurück an das Frontend.
-
-Bitte beachten Sie, dass dies eine allgemeine Anleitung ist und je nach den spezifischen Anforderungen Ihrer Anwendung angepasst werden kann. Es ist auch wichtig, Fehlerbehandlungen und Validierungen hinzuzufügen, um die Robustheit Ihrer Anwendung zu gewährleisten. Viel Erfolg bei Ihrem Projekt! 😊
-
-Es gibt verschiedene Möglichkeiten, wie Sie die Decks in Rust speichern können. Hier sind einige Optionen:
-
-1. **In-Memory-Speicherung**: Sie können eine Datenstruktur wie `Vec<Deck>` oder `HashMap<String, Deck>` verwenden, um die Decks im Speicher zu speichern. Dies ist einfach zu implementieren, aber die Daten gehen verloren, wenn das Programm beendet wird.
-
-2. **Dateisystem**: Sie können die Decks als Dateien auf dem Dateisystem speichern. Jedes Deck könnte seine eigene Datei sein, und die Karten könnten als Zeilen in dieser Datei gespeichert werden. Sie könnten die Daten im JSON-Format speichern, da Ihre Strukturen bereits das `serde::Serialize`-Trait implementieren.
-
-3. **Datenbank**: Für eine robustere Lösung könnten Sie eine Datenbank verwenden, um die Decks zu speichern. Es gibt verschiedene Datenbanken, die Sie verwenden könnten, z.B. SQLite, PostgreSQL, etc. Es gibt Rust-Bibliotheken, die die Interaktion mit diesen Datenbanken erleichtern.
-
-Hier ist ein einfaches Beispiel, wie Sie die Decks im Speicher mit einem `Vec<Deck>` speichern könnten:
-
-```rust
-#[derive(serde::Serialize)]
-pub struct Card {
-    question: String,
-    answer: String,
-}
-
-#[derive(serde::Serialize)]
-pub struct Deck {
-    name: String,
-    cards: Vec<Card>,
-}
-
-pub struct App {
-    decks: Vec<Deck>,
-}
-
-impl App {
-    pub fn new() -> Self {
-        Self { decks: Vec::new() }
-    }
-
-    pub fn add_deck(&mut self, deck: Deck) {
-        self.decks.push(deck);
-    }
-
-    // Weitere Methoden zum Hinzufügen/Bearbeiten/Löschen von Karten...
-}
-```
-In diesem Beispiel würde die `App`-Struktur alle Decks speichern.
-
-
-use rusqlite::{params, Connection, Result};
-use serde::Serialize;
-
-#[derive(Serialize)]
-pub struct Card {
-    question: String,
-    answer: String,
-}
-
-#[derive(Serialize)]
-pub struct Deck {
-    name: String,
-    cards: Vec<Card>,
-}
-
-pub struct App {
-    conn: Connection,
-}
-
-impl App {
-    pub fn new(db_path: &str) -> Result<Self> {
-        let conn = Connection::open(db_path)?;
-
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS decks (
-                name TEXT PRIMARY KEY
-            )",
-            [],
-        )?;
-
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS cards (
-                question TEXT,
-                answer TEXT,
-                deck_name TEXT,
-                FOREIGN KEY(deck_name) REFERENCES decks(name)
-            )",
-            [],
-        )?;
-
-        Ok(Self { conn })
-    }
-
-    pub fn add_deck(&self, deck: &Deck) -> Result<()> {
-        self.conn.execute(
-            "INSERT INTO decks (name) VALUES (?1)",
-            params![deck.name],
-        )?;
-
-        for card in &deck.cards {
-            self.conn.execute(
-                "INSERT INTO cards (question, answer, deck_name) VALUES (?1, ?2, ?3)",
-                params![card.question, card.answer, deck.name],
-            )?;
-        }
-
-        Ok(())
-    }
-
-    // Weitere Methoden zum Hinzufügen/Bearbeiten/Löschen von Karten...
-}
-
-*/
+// TODO: ease factor und initial_interval für jedes Deck konfigurierbar machen

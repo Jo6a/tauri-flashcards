@@ -164,9 +164,32 @@ impl App {
 
     pub fn add_card(&self, deck_name: String, question: String, answer: String) -> Result<()> {
         println!("add_card1: {} {} {}", deck_name, question, answer);
+
         let result = self.conn.execute(
-            "INSERT INTO cards (question, answer, next_review_at, interval, ease_factor, reviews_count, successful_reviews, failed_reviews, deck_name) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-            params![question, answer, (Utc::now() + Duration::days(1)).timestamp(), Duration::days(1).num_seconds(), 2.5, 0, 0, 0, deck_name],
+            r#"
+            INSERT INTO cards (
+                question,
+                answer,
+                next_review_at,
+                interval,
+                ease_factor,
+                reviews_count,
+                successful_reviews,
+                failed_reviews,
+                deck_name
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+            "#, // Ende des Raw-String-Literals
+            params![
+                question,
+                answer,
+                (Utc::now() + Duration::days(1)).timestamp(),
+                Duration::days(1).num_seconds(),
+                2.5,
+                0,
+                0,
+                0,
+                deck_name
+            ],
         );
 
         match result {

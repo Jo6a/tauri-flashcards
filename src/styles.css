@@ -147,3 +147,13 @@ button:hover {
   color: white;
 }
 
+#button-container {
+  display: flex; /* Flexbox-Container, um die Buttons in einer Reihe anzuzeigen */
+  justify-content: space-around; /* Verteilt die Buttons gleichmäßig im Container */
+  align-items: center; /* Zentriert die Buttons vertikal */
+}
+
+#button-container button {
+  margin: 0 5px; /* Fügt einen kleinen Abstand zwischen den Buttons hinzu */
+}
+

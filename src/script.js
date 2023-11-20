@@ -64,6 +64,9 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('show-button').onclick = function() {
       document.getElementById('text-field-2').style.display = 'block';
       document.getElementById('wrong-button').style.display = 'block';
+      document.getElementById('hard-button').style.display = 'block';
+      document.getElementById('normal-button').style.display = 'block';
+      document.getElementById('easy-button').style.display = 'block';
     };
   };
 

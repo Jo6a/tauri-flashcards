@@ -125,6 +125,32 @@ document.getElementById('menu-button').onclick = function() {
     }
   };
 
+  async function reviewCard(difficulty) {
+    const deck_text = document.getElementById('selected-deck').textContent;
+    const question_text = document.getElementById('text-field').value;
+    console.log(deck_text);
+    console.log(question_text);
+    if (deck_text !== '') {
+      const { invoke } = window.__TAURI__.tauri;
+      await invoke('review_card', { deckName: deck_text, cardQuestion: question_text, difficulty: difficulty });
+    }
+  }
+  
+  // Eine Liste der Schwierigkeitsgrade und der zugehörigen Button-IDs
+  const buttons = [
+    { id: 'wrong-button', difficulty: 'wrong' },
+    { id: 'hard-button', difficulty: 'hard' },
+    { id: 'good-button', difficulty: 'good' },
+    { id: 'easy-button', difficulty: 'easy' }
+  ];
+  
+  // Schleife, um jedem Button das OnClick-Event zuzuweisen
+  buttons.forEach(button => {
+    document.getElementById(button.id).onclick = function () {
+      reviewCard(button.difficulty);
+    };
+  });
+
 async function loadDecksFromBackend() {
     const { invoke } = window.__TAURI__.tauri;
     const deckNames = await invoke('get_deck_names');

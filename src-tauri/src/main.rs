@@ -53,6 +53,7 @@ fn get_card(deck_name: String) -> (String, String) {
 
 #[tauri::command]
 fn review_card(deck_name: String, card_question: String, difficulty: String) -> Result<(), String> {
+    println!("r1 {}", difficulty);
     let app = APP.lock().unwrap();
     let difficulty_enum = match difficulty.as_str() {
         "wrong" => review::ReviewDifficulty::Hard,
@@ -84,8 +85,11 @@ fn review_card(deck_name: String, card_question: String, difficulty: String) -> 
     let mut decks = app.load_decks().map_err(|err| err.to_string())?;
     let deck = &mut decks[deck_index];
     let card = &mut deck.cards[card_index];
-
+    
+    println!("r11 {}", card.schedule.reviews_count);
     card.schedule.review(difficulty_enum);
+    println!("r12 {}", card.schedule.reviews_count);
+
 
     app.update_card_review_schedule(&deck.name, &card.question, &card.schedule)
         .map_err(|err| err.to_string())

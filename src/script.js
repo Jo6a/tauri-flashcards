@@ -137,6 +137,7 @@ document.getElementById('menu-button').onclick = function() {
       const [question, answer] = await invoke('get_card', { deckName: document.getElementById('selected-deck').textContent });
       document.getElementById('text-field').value = question;
       document.getElementById('text-field-2').value = answer;
+      document.getElementById('text-field-2').style.display = 'none';
     }
   }
   

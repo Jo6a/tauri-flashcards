@@ -115,6 +115,16 @@ fn add_deck(deck_name: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn delete_deck(deck_name: String) -> Result<(), String> {
+    println!("e1");
+    let app = APP.lock().unwrap();
+    match app.delete_deck(deck_name) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
+}
+
+#[tauri::command]
 fn add_card(deck_name: String, question: String, answer: String) -> Result<(), String> {
     println!("h2");
     let app = APP.lock().unwrap();
@@ -163,6 +173,20 @@ impl App {
         self.conn
             .execute("INSERT INTO decks (name) VALUES (?1)", params![deck_name])?;
 
+        Ok(())
+    }
+
+    pub fn delete_deck(&self, deck_name: String) -> Result<(), rusqlite::Error> {
+        self.conn.execute(
+            "DELETE FROM cards WHERE deck_name = ?1",
+            params![deck_name],
+        )?;
+
+        self.conn.execute(
+            "DELETE FROM decks WHERE name = ?1",
+            params![deck_name],
+        )?;
+    
         Ok(())
     }
 
@@ -279,6 +303,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             get_card,
             get_deck_names,
             add_deck,
+            delete_deck,
             add_card,
             review_card
         ])

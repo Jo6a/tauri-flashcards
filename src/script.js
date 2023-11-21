@@ -114,6 +114,14 @@ document.getElementById('menu-button').onclick = function() {
     }
   };
 
+  document.getElementById('delete-deck-button').onclick = async function() {
+    deck_name = document.getElementById('selected-deck').textContent;
+    if (deck_name != '') {
+        const { invoke } = window.__TAURI__.tauri;
+        await invoke('delete_deck', { deckName: deck_name });
+    }
+  };
+
   document.getElementById('add-button').onclick = async function() {
     deck_text = document.getElementById('selected-deck').textContent;
     question_text = document.getElementById('front-field').value;

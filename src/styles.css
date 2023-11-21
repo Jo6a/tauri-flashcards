@@ -111,6 +111,11 @@ textarea {
   display: block;
 }
 
+#new-deck {
+  height: 50px;
+  display: block;
+}
+
 button {
   cursor: pointer;
   background-color: #007BFF;

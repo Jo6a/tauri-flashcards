@@ -56,7 +56,7 @@ fn review_card(deck_name: String, card_question: String, difficulty: String) -> 
     println!("r1 {}", difficulty);
     let app = APP.lock().unwrap();
     let difficulty_enum = match difficulty.as_str() {
-        "wrong" => review::ReviewDifficulty::Hard,
+        "wrong" => review::ReviewDifficulty::Wrong,
         "hard" => review::ReviewDifficulty::Hard,
         "good" => review::ReviewDifficulty::Medium,
         "easy" => review::ReviewDifficulty::Easy,

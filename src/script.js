@@ -133,6 +133,9 @@ document.getElementById('menu-button').onclick = function() {
     if (deck_text !== '') {
       const { invoke } = window.__TAURI__.tauri;
       await invoke('review_card', { deckName: deck_text, cardQuestion: question_text, difficulty: difficulty });
+      const [question, answer] = await invoke('get_card', { deckName: document.getElementById('selected-deck').textContent });
+      document.getElementById('text-field').value = question;
+      document.getElementById('text-field-2').value = answer;
     }
   }
   

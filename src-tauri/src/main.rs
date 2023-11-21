@@ -40,7 +40,7 @@ fn get_card(deck_name: String) -> (String, String) {
             if let Some(oldest_card) = deck
                 .cards
                 .iter()
-                .max_by_key(|card| card.schedule.next_review_at)
+                .min_by_key(|card| card.schedule.next_review_at)
             {
                 return (oldest_card.question.clone(), oldest_card.answer.clone());
             }

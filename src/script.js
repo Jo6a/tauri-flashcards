@@ -62,11 +62,12 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('text-field-2').value = answer;
   
     document.getElementById('show-button').onclick = function() {
-      document.getElementById('text-field-2').style.display = 'block';
-      document.getElementById('wrong-button').style.display = 'block';
-      document.getElementById('hard-button').style.display = 'block';
-      document.getElementById('normal-button').style.display = 'block';
-      document.getElementById('easy-button').style.display = 'block';
+      const textfield2 = document.getElementById('text-field-2');
+      if (textfield2.style.display === 'block') {
+        textfield2.style.display = 'none';
+      } else {
+        textfield2.style.display = 'block';
+      }
     };
   };
 

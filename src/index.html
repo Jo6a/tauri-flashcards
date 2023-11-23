@@ -43,6 +43,33 @@
     <div id="options-view" style="display: none;">
       <h1>Options</h1>
       <button id="theme-button">Light Mode</button>
+      <h2>Deck Options</h2>
+      <div class="form-group">
+        <label for="initial-interval">Initial interval:</label>
+        <select id="initial-interval">
+          <option value="1">1 hour</option>
+          <option value="3">3 hours</option>
+          <option value="6">6 hours</option>
+          <option value="12">12 hours</option>
+          <option value="24" selected>1 day</option>
+          <option value="48">2 days</option>
+          <option value="96">4 days</option>
+          <option value="192">8 days</option>
+          <option value="384">16 days</option>
+          <option value="768">32 days</option>
+        </select>
+        <label for="ease-factor">Ease factor:</label>
+        <select id="ease-factor">
+          <option value="1.3">1.3</option>
+          <option value="1.5">1.5</option>
+          <option value="1.7">1.7</option>
+          <option value="1.9" selected>1.9</option>
+          <option value="2.1">2.1</option>
+          <option value="2.3">2.3</option>
+          <option value="2.5">2.5</option>
+        </select>
+      </div>
+      <button id="apply-button">Apply</button>
     </div>
     <script src="script.js"></script>
   </body>

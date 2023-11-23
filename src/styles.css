@@ -164,3 +164,20 @@ button:hover {
   margin: 0 5px; /* Fügt einen kleinen Abstand zwischen den Buttons hinzu */
 }
 
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+

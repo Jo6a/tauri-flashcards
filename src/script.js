@@ -91,6 +91,12 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('add-card-button').classList.remove('active');
     document.getElementById('options-button').classList.add('active');
     document.getElementById('main-view-button').classList.remove('active');
+
+    let deckName = document.getElementById('selected-deck').textContent;
+    var deckOptionsHeading = document.getElementById("deck-options");
+    if (!deckOptionsHeading.textContent.includes(deckName)) {
+      deckOptionsHeading.textContent += " (" + deckName + ")";
+    }
   };
   
   document.getElementById('theme-button').onclick = function() {

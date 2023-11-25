@@ -50,7 +50,7 @@ fn get_card(deck_name: String) -> (String, String) {
             //return (deck.cards[0].question.clone(), deck.cards[0].answer.clone());
         }
     }
-    return ("".to_string(), "".to_string());
+    return ("Done".to_string(), "Done".to_string());
 }
 
 #[tauri::command]
@@ -97,8 +97,22 @@ fn review_card(deck_name: String, card_question: String, difficulty: String) -> 
 }
 
 #[tauri::command]
-fn set_deckoptions(initial_interval: i32, ease_factor: f32) {
-    println!("{} {}", initial_interval, ease_factor);
+fn get_deckoptions(deck_name: String) -> (i32, f32) {
+    let app = APP.lock().unwrap();
+    match app.get_deckoptions(deck_name) {
+        Ok(params) => params,
+        Err(_) => (0, 0.0),
+    }
+}
+
+#[tauri::command]
+fn set_deckoptions(deck_name: String, initial_interval: i32, initial_ease_factor: f32) -> Result<(), String> {
+    println!("{} {} {}", deck_name, initial_interval, initial_ease_factor);
+    let app = APP.lock().unwrap();
+    match app.set_deckoptions(deck_name, initial_interval, initial_ease_factor) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
 }
 
 #[tauri::command]
@@ -335,6 +349,43 @@ impl App {
 
         Ok(())
     }
+
+    pub fn get_deckoptions(&self, deck_name: String) -> Result<(i32, f32), rusqlite::Error> {
+        let mut stmt = self.conn.prepare(
+            "SELECT initial_interval, initial_ease_factor FROM decks WHERE name = ?1"
+        )?;
+        let mut tuple_iter = stmt.query_map(params![&deck_name], |row| {
+            Ok((row.get(0)?, row.get(1)?))
+        })?;
+    
+        if let Some(result) = tuple_iter.next() {
+            result.map_err(Into::into)
+        } else {
+            Err(rusqlite::Error::QueryReturnedNoRows)
+        }
+    }
+
+    pub fn set_deckoptions(&self, deck_name: String, initial_interval: i32, initial_ease_factor: f32) -> rusqlite::Result<()> {
+        println!("Setting deck options for: {}", deck_name);
+        println!("Initial interval: {}, Initial ease factor: {}", initial_interval, initial_ease_factor);
+        let result = self.conn.execute(
+            "UPDATE decks SET initial_interval = ?1, initial_ease_factor = ?2 WHERE name = ?3",
+            rusqlite::params![initial_interval, initial_ease_factor, deck_name],
+        );
+        match result {
+            Ok(rows_updated) => {
+                println!("Rows updated: {}", rows_updated);
+                if rows_updated == 0 {
+                    println!("No rows were updated, check if the deck_name is correct and exists in the database.");
+                }
+                Ok(())
+            }
+            Err(e) => {
+                println!("Error updating deck options: {:?}", e);
+                Err(e)
+            }
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -346,6 +397,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             delete_deck,
             add_card,
             review_card,
+            get_deckoptions,
             set_deckoptions
         ])
         .run(tauri::generate_context!())

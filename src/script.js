@@ -82,7 +82,7 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('options-button').classList.remove('active');
   };
   
-  document.getElementById('options-button').onclick = function() {
+  document.getElementById('options-button').onclick = async function() {
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('options-view').style.display = 'block';
     document.getElementById('decks-view').style.display = 'none';
@@ -94,9 +94,9 @@ document.getElementById('menu-button').onclick = function() {
 
     let deckName = document.getElementById('selected-deck').textContent;
     var deckOptionsHeading = document.getElementById("deck-options");
-    if (!deckOptionsHeading.textContent.includes(deckName)) {
-      deckOptionsHeading.textContent += " (" + deckName + ")";
-    }
+    deckOptionsHeading.textContent = "Deck Options (" + deckName + ")";
+
+    await loadDeckParams();
   };
   
   document.getElementById('theme-button').onclick = function() {
@@ -148,10 +148,11 @@ document.getElementById('menu-button').onclick = function() {
   };
 
   document.getElementById('apply-button').onclick = async function() {
-      let initial_interval = parseInt(document.getElementById('initial-interval').value);
-      let ease_factor = parseFloat(document.getElementById('ease-factor').value);
-      const { invoke } = window.__TAURI__.tauri;
-      await invoke('set_deckoptions', { initialInterval: initial_interval, initialEaseFactor: ease_factor });
+    deck_name = document.getElementById('selected-deck').textContent;
+    let initial_interval = parseInt(document.getElementById('initial-interval').value);
+    let ease_factor = parseFloat(document.getElementById('ease-factor').value);
+    const { invoke } = window.__TAURI__.tauri;
+    await invoke('set_deckoptions', { deckName: deck_name, initialInterval: initial_interval, initialEaseFactor: ease_factor });
   };
 
   async function reviewCard(difficulty) {
@@ -198,5 +199,20 @@ async function loadDecksFromBackend() {
         };
         deckList.appendChild(listItem);
     }
+}
+
+async function loadDeckParams() {
+  const { invoke } = window.__TAURI__.tauri;
+  const params = await invoke('get_deckoptions', { deckName: document.getElementById('selected-deck').textContent });
+  if (params) {
+    console.log(params);
+
+    const initialIntervalSelect = document.getElementById('initial-interval');
+    const easeFactorSelect = document.getElementById('ease-factor');
+    initialIntervalSelect.value = params[0].toString(); 
+    easeFactorSelect.value = params[1].toFixed(1);
+  } else {
+    console.error("Deck parameters could not be loaded.");
+  }
 }
   

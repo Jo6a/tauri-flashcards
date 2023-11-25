@@ -114,9 +114,13 @@ document.getElementById('menu-button').onclick = function() {
 
   document.getElementById('add-deck-button').onclick = async function() {
     deck_name = document.getElementById('new-deck').value;
+    let initial_interval = parseInt(document.getElementById('initial-interval').value);
+    let ease_factor = parseFloat(document.getElementById('ease-factor').value);
+    console.log(initial_interval);
+    console.log(ease_factor);
     if (deck_name != '') {
         const { invoke } = window.__TAURI__.tauri;
-        await invoke('add_deck', { deckName: deck_name });
+        await invoke('add_deck', { deckName: deck_name, initialInterval: initial_interval, initialEaseFactor: ease_factor });
     }
   };
 
@@ -132,12 +136,22 @@ document.getElementById('menu-button').onclick = function() {
     deck_text = document.getElementById('selected-deck').textContent;
     question_text = document.getElementById('front-field').value;
     answer_text = document.getElementById('back-field').value;
+    let initial_interval = parseInt(document.getElementById('initial-interval').value);
+    let ease_factor = parseFloat(document.getElementById('ease-factor').value);
     console.log(deck_text);
     console.log(question_text);
     if (question_text != '') {
         const { invoke } = window.__TAURI__.tauri;
-        await invoke('add_card', { deckName: deck_text, question: question_text, answer: answer_text });
+        await invoke('add_card', { deckName: deck_text, question: question_text, answer: answer_text,
+          initialInterval: initial_interval, initialEaseFactor: ease_factor });
     }
+  };
+
+  document.getElementById('apply-button').onclick = async function() {
+      let initial_interval = parseInt(document.getElementById('initial-interval').value);
+      let ease_factor = parseFloat(document.getElementById('ease-factor').value);
+      const { invoke } = window.__TAURI__.tauri;
+      await invoke('set_deckoptions', { initialInterval: initial_interval, initialEaseFactor: ease_factor });
   };
 
   async function reviewCard(difficulty) {
@@ -172,11 +186,11 @@ document.getElementById('menu-button').onclick = function() {
 
 async function loadDecksFromBackend() {
     const { invoke } = window.__TAURI__.tauri;
-    const deckNames = await invoke('get_deck_names');
-    console.log(deckNames);
+    const decks = await invoke('get_deck_names');
+    console.log(decks);
     const deckList = document.getElementById('deck-list');
     deckList.innerHTML = '';
-    for (const deck of deckNames) {
+    for (const deck of decks) {
         const listItem = document.createElement('li');
         listItem.textContent = deck.name;
         listItem.onclick = function () {

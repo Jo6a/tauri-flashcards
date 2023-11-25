@@ -23,6 +23,8 @@ pub struct Card {
 #[derive(serde::Serialize)]
 pub struct Deck {
     name: String,
+    initial_interval: i32,
+    initial_ease_factor: f32,
     cards: Vec<Card>,
 }
 
@@ -85,14 +87,18 @@ fn review_card(deck_name: String, card_question: String, difficulty: String) -> 
     let mut decks = app.load_decks().map_err(|err| err.to_string())?;
     let deck = &mut decks[deck_index];
     let card = &mut deck.cards[card_index];
-    
+
     println!("r11 {}", card.schedule.reviews_count);
     card.schedule.review(difficulty_enum);
     println!("r12 {}", card.schedule.reviews_count);
 
-
     app.update_card_review_schedule(&deck.name, &card.question, &card.schedule)
         .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+fn set_deckoptions(initial_interval: i32, ease_factor: f32) {
+    println!("{} {}", initial_interval, ease_factor);
 }
 
 #[tauri::command]
@@ -105,10 +111,14 @@ fn get_deck_names() -> Vec<Deck> {
 }
 
 #[tauri::command]
-fn add_deck(deck_name: String) -> Result<(), String> {
+fn add_deck(
+    deck_name: String,
+    initial_interval: i32,
+    initial_ease_factor: f32,
+) -> Result<(), String> {
     println!("h1");
     let app = APP.lock().unwrap();
-    match app.add_deck(deck_name) {
+    match app.add_deck(deck_name, initial_interval, initial_ease_factor) {
         Ok(_) => Ok(()),
         Err(err) => Err(err.to_string()),
     }
@@ -125,10 +135,22 @@ fn delete_deck(deck_name: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn add_card(deck_name: String, question: String, answer: String) -> Result<(), String> {
+fn add_card(
+    deck_name: String,
+    question: String,
+    answer: String,
+    initial_interval: i32,
+    initial_ease_factor: f32,
+) -> Result<(), String> {
     println!("h2");
     let app = APP.lock().unwrap();
-    match app.add_card(deck_name, question, answer) {
+    match app.add_card(
+        deck_name,
+        question,
+        answer,
+        initial_interval,
+        initial_ease_factor,
+    ) {
         Ok(_) => Ok(()),
         Err(err) => Err(err.to_string()),
     }
@@ -144,7 +166,9 @@ impl App {
 
         conn.execute(
             "CREATE TABLE IF NOT EXISTS decks (
-                name TEXT PRIMARY KEY
+                name TEXT PRIMARY KEY,
+                initial_interval INTEGER,
+                initial_ease_factor REAL
             )",
             [],
         )?;
@@ -169,28 +193,38 @@ impl App {
         Ok(Self { conn })
     }
 
-    pub fn add_deck(&self, deck_name: String) -> Result<()> {
-        self.conn
-            .execute("INSERT INTO decks (name) VALUES (?1)", params![deck_name])?;
+    pub fn add_deck(
+        &self,
+        deck_name: String,
+        initial_interval: i32,
+        initial_ease_factor: f32,
+    ) -> Result<()> {
+        self.conn.execute(
+            "INSERT INTO decks (name, initial_interval, initial_ease_factor) VALUES (?1, ?2, ?3)",
+            params![deck_name, initial_interval, initial_ease_factor],
+        )?;
 
         Ok(())
     }
 
     pub fn delete_deck(&self, deck_name: String) -> Result<(), rusqlite::Error> {
-        self.conn.execute(
-            "DELETE FROM cards WHERE deck_name = ?1",
-            params![deck_name],
-        )?;
+        self.conn
+            .execute("DELETE FROM cards WHERE deck_name = ?1", params![deck_name])?;
 
-        self.conn.execute(
-            "DELETE FROM decks WHERE name = ?1",
-            params![deck_name],
-        )?;
-    
+        self.conn
+            .execute("DELETE FROM decks WHERE name = ?1", params![deck_name])?;
+
         Ok(())
     }
 
-    pub fn add_card(&self, deck_name: String, question: String, answer: String) -> Result<()> {
+    pub fn add_card(
+        &self,
+        deck_name: String,
+        question: String,
+        answer: String,
+        initial_interval: i32,
+        initial_ease_factor: f32,
+    ) -> Result<()> {
         println!("add_card1: {} {} {}", deck_name, question, answer);
 
         let result = self.conn.execute(
@@ -210,9 +244,9 @@ impl App {
             params![
                 question,
                 answer,
-                (Utc::now() + Duration::days(1)).timestamp(),
-                Duration::days(1).num_seconds(),
-                2.5,
+                Utc::now().timestamp(),
+                Duration::hours(initial_interval as i64).num_seconds(),
+                initial_ease_factor,
                 0,
                 0,
                 0,
@@ -235,27 +269,31 @@ impl App {
         }
     }
 
-    pub fn load_decks(&self) -> Result<Vec<Deck>> {
-        let mut stmt = self.conn.prepare("SELECT name FROM decks")?;
-        let deck_names = stmt.query_map([], |row| row.get(0))?;
-
+    pub fn load_decks(&self) -> Result<Vec<Deck>, rusqlite::Error> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT name, initial_interval, initial_ease_factor FROM decks")?;
         let mut decks = Vec::new();
-        for deck_name in deck_names {
-            let deck_name = deck_name?;
+
+        let deck_data = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?;
+
+        for deck_tuple in deck_data {
+            let (deck_name, initial_interval, initial_ease_factor) = deck_tuple?;
+
             let mut stmt = self.conn.prepare(
                 "SELECT question, answer, next_review_at, interval, ease_factor, reviews_count, successful_reviews, failed_reviews FROM cards WHERE deck_name = ?1"
             )?;
-            let cards = stmt.query_map(params![deck_name], |row| {
+            let cards = stmt.query_map(params![&deck_name], |row| {
                 Ok(Card {
                     question: row.get(0)?,
                     answer: row.get(1)?,
                     schedule: ReviewSchedule {
-                        next_review_at: row.get(2)?, // Datum der nächsten Überprüfung aus der Datenbank
-                        interval: row.get(3)?,       // Intervall aus der Datenbank
-                        ease_factor: row.get(4)?,    // Schwierigkeitsgrad aus der Datenbank
-                        reviews_count: row.get(5)?,  // Anzahl der Überprüfungen aus der Datenbank
-                        successful_reviews: row.get(6)?, // Anzahl der erfolgreichen Überprüfungen aus der Datenbank
-                        failed_reviews: row.get(7)?, // Anzahl der gescheiterten Überprüfungen aus der Datenbank
+                        next_review_at: row.get(2)?,
+                        interval: row.get(3)?,
+                        ease_factor: row.get(4)?,
+                        reviews_count: row.get(5)?,
+                        successful_reviews: row.get(6)?,
+                        failed_reviews: row.get(7)?,
                     },
                 })
             })?;
@@ -267,6 +305,8 @@ impl App {
 
             decks.push(Deck {
                 name: deck_name,
+                initial_interval,
+                initial_ease_factor,
                 cards: card_vec,
             });
         }
@@ -305,11 +345,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             add_deck,
             delete_deck,
             add_card,
-            review_card
+            review_card,
+            set_deckoptions
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
     Ok(())
 }
-// TODO: ease factor und initial_interval für jedes Deck konfigurierbar machen

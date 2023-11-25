@@ -121,6 +121,8 @@ document.getElementById('menu-button').onclick = function() {
     if (deck_name != '') {
         const { invoke } = window.__TAURI__.tauri;
         await invoke('add_deck', { deckName: deck_name, initialInterval: initial_interval, initialEaseFactor: ease_factor });
+        await loadDecksFromBackend();
+        document.getElementById('new-deck').value = "";
     }
   };
 
@@ -129,6 +131,7 @@ document.getElementById('menu-button').onclick = function() {
     if (deck_name != '') {
         const { invoke } = window.__TAURI__.tauri;
         await invoke('delete_deck', { deckName: deck_name });
+        await loadDecksFromBackend();
     }
   };
 
@@ -170,7 +173,6 @@ document.getElementById('menu-button').onclick = function() {
     }
   }
   
-  // Eine Liste der Schwierigkeitsgrade und der zugehörigen Button-IDs
   const buttons = [
     { id: 'wrong-button', difficulty: 'wrong' },
     { id: 'hard-button', difficulty: 'hard' },
@@ -178,7 +180,6 @@ document.getElementById('menu-button').onclick = function() {
     { id: 'easy-button', difficulty: 'easy' }
   ];
   
-  // Schleife, um jedem Button das OnClick-Event zuzuweisen
   buttons.forEach(button => {
     document.getElementById(button.id).onclick = function () {
       reviewCard(button.difficulty);

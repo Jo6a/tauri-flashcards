@@ -106,7 +106,11 @@ fn get_deckoptions(deck_name: String) -> (i64, f32) {
 }
 
 #[tauri::command]
-fn set_deckoptions(deck_name: String, initial_interval: i64, initial_ease_factor: f32) -> Result<(), String> {
+fn set_deckoptions(
+    deck_name: String,
+    initial_interval: i64,
+    initial_ease_factor: f32,
+) -> Result<(), String> {
     println!("{} {} {}", deck_name, initial_interval, initial_ease_factor);
     let app = APP.lock().unwrap();
     match app.set_deckoptions(deck_name, initial_interval, initial_ease_factor) {
@@ -351,13 +355,12 @@ impl App {
     }
 
     pub fn get_deckoptions(&self, deck_name: String) -> Result<(i64, f32), rusqlite::Error> {
-        let mut stmt = self.conn.prepare(
-            "SELECT initial_interval, initial_ease_factor FROM decks WHERE name = ?1"
-        )?;
-        let mut tuple_iter = stmt.query_map(params![&deck_name], |row| {
-            Ok((row.get(0)?, row.get(1)?))
-        })?;
-    
+        let mut stmt = self
+            .conn
+            .prepare("SELECT initial_interval, initial_ease_factor FROM decks WHERE name = ?1")?;
+        let mut tuple_iter =
+            stmt.query_map(params![&deck_name], |row| Ok((row.get(0)?, row.get(1)?)))?;
+
         if let Some(result) = tuple_iter.next() {
             result.map_err(Into::into)
         } else {
@@ -365,9 +368,17 @@ impl App {
         }
     }
 
-    pub fn set_deckoptions(&self, deck_name: String, initial_interval: i64, initial_ease_factor: f32) -> rusqlite::Result<()> {
+    pub fn set_deckoptions(
+        &self,
+        deck_name: String,
+        initial_interval: i64,
+        initial_ease_factor: f32,
+    ) -> rusqlite::Result<()> {
         println!("Setting deck options for: {}", deck_name);
-        println!("Initial interval: {}, Initial ease factor: {}", initial_interval, initial_ease_factor);
+        println!(
+            "Initial interval: {}, Initial ease factor: {}",
+            initial_interval, initial_ease_factor
+        );
         let result = self.conn.execute(
             "UPDATE decks SET initial_interval = ?1, initial_ease_factor = ?2 WHERE name = ?3",
             rusqlite::params![initial_interval, initial_ease_factor, deck_name],

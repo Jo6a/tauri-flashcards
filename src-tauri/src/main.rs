@@ -23,7 +23,7 @@ pub struct Card {
 #[derive(serde::Serialize)]
 pub struct Deck {
     name: String,
-    initial_interval: i32,
+    initial_interval: i64,
     initial_ease_factor: f32,
     cards: Vec<Card>,
 }
@@ -97,7 +97,7 @@ fn review_card(deck_name: String, card_question: String, difficulty: String) -> 
 }
 
 #[tauri::command]
-fn get_deckoptions(deck_name: String) -> (i32, f32) {
+fn get_deckoptions(deck_name: String) -> (i64, f32) {
     let app = APP.lock().unwrap();
     match app.get_deckoptions(deck_name) {
         Ok(params) => params,
@@ -106,7 +106,7 @@ fn get_deckoptions(deck_name: String) -> (i32, f32) {
 }
 
 #[tauri::command]
-fn set_deckoptions(deck_name: String, initial_interval: i32, initial_ease_factor: f32) -> Result<(), String> {
+fn set_deckoptions(deck_name: String, initial_interval: i64, initial_ease_factor: f32) -> Result<(), String> {
     println!("{} {} {}", deck_name, initial_interval, initial_ease_factor);
     let app = APP.lock().unwrap();
     match app.set_deckoptions(deck_name, initial_interval, initial_ease_factor) {
@@ -127,7 +127,7 @@ fn get_deck_names() -> Vec<Deck> {
 #[tauri::command]
 fn add_deck(
     deck_name: String,
-    initial_interval: i32,
+    initial_interval: i64,
     initial_ease_factor: f32,
 ) -> Result<(), String> {
     println!("h1");
@@ -153,7 +153,7 @@ fn add_card(
     deck_name: String,
     question: String,
     answer: String,
-    initial_interval: i32,
+    initial_interval: i64,
     initial_ease_factor: f32,
 ) -> Result<(), String> {
     println!("h2");
@@ -210,7 +210,7 @@ impl App {
     pub fn add_deck(
         &self,
         deck_name: String,
-        initial_interval: i32,
+        initial_interval: i64,
         initial_ease_factor: f32,
     ) -> Result<()> {
         self.conn.execute(
@@ -236,7 +236,7 @@ impl App {
         deck_name: String,
         question: String,
         answer: String,
-        initial_interval: i32,
+        initial_interval: i64,
         initial_ease_factor: f32,
     ) -> Result<()> {
         println!("add_card1: {} {} {}", deck_name, question, answer);
@@ -259,7 +259,7 @@ impl App {
                 question,
                 answer,
                 Utc::now().timestamp(),
-                Duration::hours(initial_interval as i64).num_seconds(),
+                Duration::hours(initial_interval).num_seconds(),
                 initial_ease_factor,
                 0,
                 0,
@@ -350,7 +350,7 @@ impl App {
         Ok(())
     }
 
-    pub fn get_deckoptions(&self, deck_name: String) -> Result<(i32, f32), rusqlite::Error> {
+    pub fn get_deckoptions(&self, deck_name: String) -> Result<(i64, f32), rusqlite::Error> {
         let mut stmt = self.conn.prepare(
             "SELECT initial_interval, initial_ease_factor FROM decks WHERE name = ?1"
         )?;
@@ -365,7 +365,7 @@ impl App {
         }
     }
 
-    pub fn set_deckoptions(&self, deck_name: String, initial_interval: i32, initial_ease_factor: f32) -> rusqlite::Result<()> {
+    pub fn set_deckoptions(&self, deck_name: String, initial_interval: i64, initial_ease_factor: f32) -> rusqlite::Result<()> {
         println!("Setting deck options for: {}", deck_name);
         println!("Initial interval: {}, Initial ease factor: {}", initial_interval, initial_ease_factor);
         let result = self.conn.execute(

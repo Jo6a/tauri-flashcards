@@ -152,7 +152,7 @@ document.getElementById('menu-button').onclick = function() {
 
   document.getElementById('apply-button').onclick = async function() {
     deck_name = document.getElementById('selected-deck').textContent;
-    let initial_interval = parseInt(document.getElementById('initial-interval').value);
+    let initial_interval = parseInt(document.getElementById('initial-interval').value) * 3600;
     let ease_factor = parseFloat(document.getElementById('ease-factor').value);
     const { invoke } = window.__TAURI__.tauri;
     await invoke('set_deckoptions', { deckName: deck_name, initialInterval: initial_interval, initialEaseFactor: ease_factor });

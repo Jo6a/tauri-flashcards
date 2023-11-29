@@ -185,9 +185,24 @@ document.getElementById('menu-button').onclick = function() {
     await invoke('set_deckoptions', { deckName: deck_name, initialInterval: initial_interval, initialEaseFactor: ease_factor });
   };
 
-  function updateCardsTable(cards) {
+  async function updateCardsTable() {
+    deck_text = document.getElementById('selected-deck').textContent;
     const tableBody = document.getElementById('cards-table').querySelector('tbody');
     tableBody.innerHTML = ''; // Löscht den aktuellen Inhalt der Tabelle
+
+    const { invoke } = window.__TAURI__.tauri;
+    const cards = await invoke('get_cards', { deckName: deck_text });
+    console.log(cards);
+    //const deckList = document.getElementById('deck-list');
+    //deckList.innerHTML = '';
+    //for (const deck of decks) {
+    //    const listItem = document.createElement('li');
+    //    listItem.textContent = deck.name;
+    //    listItem.onclick = function () {
+    //        document.getElementById('selected-deck').textContent = deck.name;
+    //    };
+    //    deckList.appendChild(listItem);
+    //}
   
     cards.forEach(card => {
       const row = document.createElement('tr');
@@ -201,7 +216,7 @@ document.getElementById('menu-button').onclick = function() {
       row.appendChild(answerCell);
       
       const nextReviewAtCell = document.createElement('td');
-      nextReviewAtCell.textContent = card.next_review_at;
+      nextReviewAtCell.textContent = card.schedule.next_review_at;
       row.appendChild(nextReviewAtCell);
       
       tableBody.appendChild(row);
@@ -238,7 +253,7 @@ document.getElementById('menu-button').onclick = function() {
 
 async function loadDecksFromBackend() {
     const { invoke } = window.__TAURI__.tauri;
-    const decks = await invoke('get_deck_names');
+    const decks = await invoke('get_decks');
     console.log(decks);
     const deckList = document.getElementById('deck-list');
     deckList.innerHTML = '';

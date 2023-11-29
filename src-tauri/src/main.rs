@@ -120,10 +120,20 @@ fn set_deckoptions(
 }
 
 #[tauri::command]
-fn get_deck_names() -> Vec<Deck> {
+fn get_decks() -> Vec<Deck> {
     let app = APP.lock().unwrap();
     match app.load_decks() {
         Ok(decks) => decks,
+        Err(_) => Vec::new(),
+    }
+}
+
+#[tauri::command]
+fn get_cards(deck_name: String) -> Vec<Card> {
+    println!("get_cards1");
+    let app = APP.lock().unwrap();
+    match app.get_cards(deck_name) {
+        Ok(cards) => cards,
         Err(_) => Vec::new(),
     }
 }
@@ -332,6 +342,33 @@ impl App {
         Ok(decks)
     }
 
+    pub fn get_cards(&self, deck_name: String) -> Result<Vec<Card>, rusqlite::Error> {
+        let mut stmt = self.conn.prepare(
+            "SELECT question, answer, next_review_at, interval, ease_factor, reviews_count, successful_reviews, failed_reviews FROM cards WHERE deck_name = ?1"
+        )?;
+        let cards = stmt.query_map(params![&deck_name], |row| {
+            Ok(Card {
+                question: row.get(0)?,
+                answer: row.get(1)?,
+                schedule: ReviewSchedule {
+                    next_review_at: row.get(2)?,
+                    interval: row.get(3)?,
+                    ease_factor: row.get(4)?,
+                    reviews_count: row.get(5)?,
+                    successful_reviews: row.get(6)?,
+                    failed_reviews: row.get(7)?,
+                },
+            })
+        })?;
+
+        let mut card_vec = Vec::new();
+        for card in cards {
+            card_vec.push(card?);
+        }
+
+        Ok(card_vec)
+    }
+
     pub fn update_card_review_schedule(
         &self,
         deck_name: &str,
@@ -403,7 +440,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_card,
-            get_deck_names,
+            get_decks,
+            get_cards,
             add_deck,
             delete_deck,
             add_card,

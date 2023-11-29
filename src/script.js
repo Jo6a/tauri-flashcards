@@ -193,16 +193,6 @@ document.getElementById('menu-button').onclick = function() {
     const { invoke } = window.__TAURI__.tauri;
     const cards = await invoke('get_cards', { deckName: deck_text });
     console.log(cards);
-    //const deckList = document.getElementById('deck-list');
-    //deckList.innerHTML = '';
-    //for (const deck of decks) {
-    //    const listItem = document.createElement('li');
-    //    listItem.textContent = deck.name;
-    //    listItem.onclick = function () {
-    //        document.getElementById('selected-deck').textContent = deck.name;
-    //    };
-    //    deckList.appendChild(listItem);
-    //}
   
     cards.forEach(card => {
       const row = document.createElement('tr');
@@ -216,7 +206,8 @@ document.getElementById('menu-button').onclick = function() {
       row.appendChild(answerCell);
       
       const nextReviewAtCell = document.createElement('td');
-      nextReviewAtCell.textContent = card.schedule.next_review_at;
+      const date = new Date(card.schedule.next_review_at * 1000);
+      nextReviewAtCell.textContent = date.toLocaleString();
       row.appendChild(nextReviewAtCell);
       
       tableBody.appendChild(row);

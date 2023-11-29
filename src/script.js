@@ -99,6 +99,13 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('add-card-button').classList.remove('active');
     document.getElementById('main-view-button').classList.remove('active');
     document.getElementById('options-button').classList.remove('active');
+
+    updateCardsTable([
+      { question: 'Was ist die Hauptstadt von Frankreich?', answer: 'Paris', next_review_at: '2022-03-10 14:00' },
+      { question: 'Was ist die Hauptstadt von Deutschland?', answer: 'Berlin', next_review_at: '2022-03-10 14:00' },
+      { question: 'Was ist die Hauptstadt von Italien?', answer: 'Rom', next_review_at: '2022-03-10 14:00' },
+      // Weitere Karten...
+    ]);
   };
   
   document.getElementById('options-button').onclick = async function() {
@@ -178,6 +185,29 @@ document.getElementById('menu-button').onclick = function() {
     await invoke('set_deckoptions', { deckName: deck_name, initialInterval: initial_interval, initialEaseFactor: ease_factor });
   };
 
+  function updateCardsTable(cards) {
+    const tableBody = document.getElementById('cards-table').querySelector('tbody');
+    tableBody.innerHTML = ''; // Löscht den aktuellen Inhalt der Tabelle
+  
+    cards.forEach(card => {
+      const row = document.createElement('tr');
+      
+      const questionCell = document.createElement('td');
+      questionCell.textContent = card.question;
+      row.appendChild(questionCell);
+      
+      const answerCell = document.createElement('td');
+      answerCell.textContent = card.answer;
+      row.appendChild(answerCell);
+      
+      const nextReviewAtCell = document.createElement('td');
+      nextReviewAtCell.textContent = card.next_review_at;
+      row.appendChild(nextReviewAtCell);
+      
+      tableBody.appendChild(row);
+    });
+  }
+  
   async function reviewCard(difficulty) {
     const deck_text = document.getElementById('selected-deck').textContent;
     const question_text = document.getElementById('text-field').value;
@@ -237,3 +267,11 @@ async function loadDeckParams() {
   }
 }
   
+document.getElementById('cards-table').onclick = function(e) {
+  const trs = document.querySelectorAll('#cards-table tr');
+  trs.forEach((tr) => {
+    tr.style.backgroundColor = '';
+  });
+  const tr = e.target.closest('tr');
+  tr.style.backgroundColor = 'lightgrey';
+};

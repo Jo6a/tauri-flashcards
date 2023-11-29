@@ -181,3 +181,30 @@ select {
   border: 1px solid #ddd;
 }
 
+#cards-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+#cards-table th, #cards-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#cards-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#cards-table tr:hover {
+  background-color: #ddd;
+}
+
+#cards-table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #4CAF50;
+  color: white;
+}
+

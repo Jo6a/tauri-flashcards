@@ -13,6 +13,7 @@
         <li id="decks-button" class="active">Decks</li>
         <li id="main-view-button">Studying</li>
         <li id="add-card-button">Add Cards</li>
+        <li id="cards-button">Overview Cards</li>
         <li id="options-button">Options</li>
       </ul>
     </div>
@@ -40,12 +41,34 @@
       <textarea id="back-field" placeholder="Back"></textarea>
       <button id="add-button">Add</button>
     </div>
+    <div id="cards-view" style="display: none;">
+      <h1>Cards</h1>
+      <table id="cards-table">
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Next Review At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Die Karten-Daten werden hier eingefügt -->
+          <!-- Beispiel einer Karte:
+          <tr>
+            <td>Was ist die Hauptstadt von Frankreich?</td>
+            <td>Paris</td>
+            <td>2022-03-10 14:00</td>
+          </tr>
+          -->
+        </tbody>
+      </table>
+    </div>
     <div id="options-view" style="display: none;">
       <h1>Options</h1>
       <button id="theme-button">Light Mode</button>
       <h2 id="deck-options">Deck Options</h2>
       <div class="form-group">
-        <label for="initial-interval">Initial interval:</label>
+        <label for="initial-interval">Initial interval for new cards:</label>
         <select id="initial-interval">
           <option value="1">1 hour</option>
           <option value="3">3 hours</option>
@@ -58,7 +81,7 @@
           <option value="384">16 days</option>
           <option value="768">32 days</option>
         </select>
-        <label for="ease-factor">Initial ease factor:</label>
+        <label for="ease-factor">Initial ease factor for new cards:</label>
         <select id="ease-factor">
           <option value="1.3">1.3</option>
           <option value="1.5">1.5</option>

@@ -3,6 +3,7 @@ document.getElementById('menu-button').onclick = function() {
     const mainContent = document.getElementById('main-content');
     const decksView = document.getElementById('decks-view');
     const addCardView = document.getElementById('add-card-view');
+    const cardsView = document.getElementById('cards-view');
     const optionsView = document.getElementById('options-view');
     
     if (sidebar.style.left === '-250px') {
@@ -10,12 +11,14 @@ document.getElementById('menu-button').onclick = function() {
       mainContent.style.marginLeft = '275px';
       decksView.style.marginLeft = '275px';
       addCardView.style.marginLeft = '275px';
+      cardsView.style.marginLeft = '275px';
       optionsView.style.marginLeft = '275px';
     } else {
       sidebar.style.left = '-250px';
       mainContent.style.marginLeft = '25px';
       decksView.style.marginLeft = '25px';
       addCardView.style.marginLeft = '25px';
+      cardsView.style.marginLeft = '25px';
       optionsView.style.marginLeft = '25px';
     }
   };
@@ -26,6 +29,7 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('decks-view').style.display = 'block';
     document.getElementById('decks-button').classList.add('active');
     document.getElementById('add-card-view').style.display = 'none';
+    document.getElementById('cards-view').style.display = 'none';
     document.getElementById('main-view-button').classList.remove('active');
     document.getElementById('options-button').classList.remove('active');
     document.getElementById('add-card-button').classList.remove('active');  
@@ -39,6 +43,7 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('decks-view').style.display = 'block';
     document.getElementById('decks-button').classList.add('active');
     document.getElementById('add-card-view').style.display = 'none';
+    document.getElementById('cards-view').style.display = 'none';
     document.getElementById('main-view-button').classList.remove('active');
     document.getElementById('options-button').classList.remove('active');
     document.getElementById('add-card-button').classList.remove('active');  
@@ -52,6 +57,7 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('decks-view').style.display = 'none';
     document.getElementById('decks-button').classList.remove('active');
     document.getElementById('add-card-view').style.display = 'none';
+    document.getElementById('cards-view').style.display = 'none';
     document.getElementById('add-card-button').classList.remove('active');
     document.getElementById('main-view-button').classList.add('active');
     document.getElementById('options-button').classList.remove('active');
@@ -77,7 +83,20 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('decks-view').style.display = 'none';
     document.getElementById('decks-button').classList.remove('active');
     document.getElementById('add-card-view').style.display = 'block';
+    document.getElementById('cards-view').style.display = 'none';
     document.getElementById('add-card-button').classList.add('active');
+    document.getElementById('main-view-button').classList.remove('active');
+    document.getElementById('options-button').classList.remove('active');
+  };
+
+  document.getElementById('cards-button').onclick = function() {
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('options-view').style.display = 'none';
+    document.getElementById('decks-view').style.display = 'none';
+    document.getElementById('decks-button').classList.remove('active');
+    document.getElementById('add-card-view').style.display = 'none';
+    document.getElementById('cards-view').style.display = 'block';
+    document.getElementById('add-card-button').classList.remove('active');
     document.getElementById('main-view-button').classList.remove('active');
     document.getElementById('options-button').classList.remove('active');
   };
@@ -88,6 +107,7 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('decks-view').style.display = 'none';
     document.getElementById('decks-button').classList.remove('active');
     document.getElementById('add-card-view').style.display = 'none';
+    document.getElementById('cards-view').style.display = 'none';
     document.getElementById('add-card-button').classList.remove('active');
     document.getElementById('options-button').classList.add('active');
     document.getElementById('main-view-button').classList.remove('active');

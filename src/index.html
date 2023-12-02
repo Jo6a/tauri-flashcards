@@ -56,6 +56,19 @@
         </tbody>
       </table>
     </div>
+    <div id="edit-card-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Edit Card</h2>
+        <label for="modal-question">Question:</label>
+        <textarea id="modal-question"></textarea>
+        <label for="modal-answer">Answer:</label>
+        <textarea id="modal-answer"></textarea>
+        <label for="modal-next-review-at">Next Review At:</label>
+        <input type="datetime-local" id="modal-next-review-at">
+        <button id="modal-apply-button">Apply</button>
+      </div>
+    </div>
     <div id="options-view" style="display: none;">
       <h1>Options</h1>
       <button id="theme-button">Light Mode</button>

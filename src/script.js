@@ -281,3 +281,100 @@ document.getElementById('cards-table').onclick = function(e) {
   const tr = e.target.closest('tr');
   tr.style.backgroundColor = 'lightgrey';
 };
+
+// Funktion, um das Modal zu öffnen
+async function openEditModal(index) {
+  const { invoke } = window.__TAURI__.tauri;
+  const cards = await invoke('get_cards', { deckName: deck_text });
+  console.log(index);
+  const card = cards[index];
+  console.log(card.question);
+
+  document.getElementById('modal-question').value = card.question;
+  document.getElementById('modal-answer').value = card.answer;
+  document.getElementById('modal-next-review-at').value = card.next_review_at;
+  document.getElementById('edit-card-modal').style.display = "block";
+}
+
+// Funktion, um das Modal zu schließen
+function closeEditModal() {
+  document.getElementById('edit-card-modal').style.display = "none";
+}
+
+// Event Listener für den Schließen-Button des Modals
+document.querySelector('.close-button').addEventListener('click', closeEditModal);
+
+// Event Listener für den Apply-Button des Modals
+document.getElementById('modal-apply-button').addEventListener('click', function() {
+  // Hier Logik für das Aktualisieren der Karte implementieren
+  // Sie können die Werte aus den Eingabefeldern holen und sie zurück in die Tabelle einfügen oder an den Server senden
+
+  // Beispiel: Aktualisieren der Karte in der Tabelle
+  // const updatedCard = {
+  //   question: document.getElementById('modal-question').value,
+  //   answer: document.getElementById('modal-answer').value,
+  //   next_review_at: document.getElementById('modal-next-review-at').value
+  // };
+  // updateCardInTable(updatedCard);
+
+  // Modal schließen
+  closeEditModal();
+});
+
+// Event Listener, um das Modal zu öffnen, wenn auf eine Karte in der Tabelle geklickt wird
+document.getElementById('cards-table').addEventListener('click', function(event) {
+  // Sicherstellen, dass das geklickte Element eine Zelle ist.
+  var target = event.target;
+  while (target != null && target.nodeName !== 'TR') {
+      target = target.parentNode;
+  }
+  if (target != null) {
+    // Die Zellen innerhalb der Zeile (TR) erhalten.
+    var cells = target.cells;
+    
+    // Den Inhalt der Zellen in Variablen speichern.
+    var question = cells[0].textContent;
+    var answer = cells[1].textContent;
+    var nextReviewAt = cells[2].textContent;
+
+    console.log(nextReviewAt);
+  
+    // Die Werte in die Eingabefelder des Modals einfügen.
+    document.getElementById('modal-question').value = question;
+    document.getElementById('modal-answer').value = answer;
+
+    var parts = nextReviewAt.split(/[.,: ]+/); // Teilt den String in Komponenten
+    var day = parseInt(parts[0], 10);
+    var month = parseInt(parts[1], 10) - 1; // Monate sind 0-basiert in JavaScript
+    var year = parseInt(parts[2], 10);
+    var hours = parseInt(parts[3], 10);
+    var minutes = parseInt(parts[4], 10);
+    var seconds = parseInt(parts[5], 10);
+
+    var dateObj = new Date(year, month, day, hours, minutes, seconds);
+    var datetimeLocalFormat = dateObj.toISOString().slice(0, 16);
+    console.log(datetimeLocalFormat);
+    document.getElementById('modal-next-review-at').value = datetimeLocalFormat;
+    
+
+    document.getElementById('modal-question').style.display = 'block';
+    document.getElementById('modal-answer').style.display = 'block';
+
+    // Das Modal anzeigen.
+    document.getElementById('edit-card-modal').style.display = 'block';
+  }
+});
+
+// Verhindern, dass das Modal geschlossen wird, wenn man innerhalb des Inhalts klickt
+document.querySelector('.modal-content').addEventListener('click', function(event) {
+  event.stopPropagation();
+});
+
+// Schließen des Modals, wenn außerhalb des Inhalts geklickt wird
+window.addEventListener('click', function(event) {
+  if (event.target == document.getElementById('edit-card-modal')) {
+    closeEditModal();
+  }
+});
+
+

@@ -206,8 +206,21 @@ document.getElementById('menu-button').onclick = function() {
       row.appendChild(answerCell);
       
       const nextReviewAtCell = document.createElement('td');
+
+      //var parts = nextReviewAt.split(/[.,: ]+/); // Teilt den String in Komponenten
+      //var day = parseInt(parts[0], 10);
+      //var month = parseInt(parts[1], 10) - 1; // Monate sind 0-basiert in JavaScript
+      //var year = parseInt(parts[2], 10);
+      //var hours = parseInt(parts[3], 10);
+      //var minutes = parseInt(parts[4], 10);
+      //var seconds = parseInt(parts[5], 10);
+  //
+      //var dateObj = new Date(year, month, day, hours, minutes, seconds);
+      //var datetimeLocalFormat = dateObj.toISOString().slice(0, 16);
+      //console.log(datetimeLocalFormat);
+
       const date = new Date(card.schedule.next_review_at * 1000);
-      nextReviewAtCell.textContent = date.toLocaleString();
+      nextReviewAtCell.textContent = date.toISOString().slice(0, 16);
       row.appendChild(nextReviewAtCell);
       
       tableBody.appendChild(row);
@@ -323,44 +336,25 @@ document.getElementById('modal-apply-button').addEventListener('click', function
 
 // Event Listener, um das Modal zu öffnen, wenn auf eine Karte in der Tabelle geklickt wird
 document.getElementById('cards-table').addEventListener('click', function(event) {
-  // Sicherstellen, dass das geklickte Element eine Zelle ist.
   var target = event.target;
   while (target != null && target.nodeName !== 'TR') {
       target = target.parentNode;
   }
   if (target != null) {
-    // Die Zellen innerhalb der Zeile (TR) erhalten.
     var cells = target.cells;
-    
-    // Den Inhalt der Zellen in Variablen speichern.
     var question = cells[0].textContent;
     var answer = cells[1].textContent;
     var nextReviewAt = cells[2].textContent;
 
     console.log(nextReviewAt);
   
-    // Die Werte in die Eingabefelder des Modals einfügen.
     document.getElementById('modal-question').value = question;
     document.getElementById('modal-answer').value = answer;
-
-    var parts = nextReviewAt.split(/[.,: ]+/); // Teilt den String in Komponenten
-    var day = parseInt(parts[0], 10);
-    var month = parseInt(parts[1], 10) - 1; // Monate sind 0-basiert in JavaScript
-    var year = parseInt(parts[2], 10);
-    var hours = parseInt(parts[3], 10);
-    var minutes = parseInt(parts[4], 10);
-    var seconds = parseInt(parts[5], 10);
-
-    var dateObj = new Date(year, month, day, hours, minutes, seconds);
-    var datetimeLocalFormat = dateObj.toISOString().slice(0, 16);
-    console.log(datetimeLocalFormat);
-    document.getElementById('modal-next-review-at').value = datetimeLocalFormat;
+    document.getElementById('modal-next-review-at').value = nextReviewAt;
     
-
     document.getElementById('modal-question').style.display = 'block';
     document.getElementById('modal-answer').style.display = 'block';
 
-    // Das Modal anzeigen.
     document.getElementById('edit-card-modal').style.display = 'block';
   }
 });

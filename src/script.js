@@ -100,12 +100,7 @@ document.getElementById('menu-button').onclick = function() {
     document.getElementById('main-view-button').classList.remove('active');
     document.getElementById('options-button').classList.remove('active');
 
-    updateCardsTable([
-      { question: 'Was ist die Hauptstadt von Frankreich?', answer: 'Paris', next_review_at: '2022-03-10 14:00' },
-      { question: 'Was ist die Hauptstadt von Deutschland?', answer: 'Berlin', next_review_at: '2022-03-10 14:00' },
-      { question: 'Was ist die Hauptstadt von Italien?', answer: 'Rom', next_review_at: '2022-03-10 14:00' },
-      // Weitere Karten...
-    ]);
+    updateCardsTable();
   };
   
   document.getElementById('options-button').onclick = async function() {
@@ -252,6 +247,9 @@ async function loadDecksFromBackend() {
     for (const deck of decks) {
         const listItem = document.createElement('li');
         listItem.textContent = deck.name;
+        if (document.getElementById('selected-deck').textContent === "") {
+          document.getElementById('selected-deck').textContent = deck.name;
+        }
         listItem.onclick = function () {
             document.getElementById('selected-deck').textContent = deck.name;
         };

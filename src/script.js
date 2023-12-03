@@ -207,18 +207,6 @@ document.getElementById('menu-button').onclick = function() {
       
       const nextReviewAtCell = document.createElement('td');
 
-      //var parts = nextReviewAt.split(/[.,: ]+/); // Teilt den String in Komponenten
-      //var day = parseInt(parts[0], 10);
-      //var month = parseInt(parts[1], 10) - 1; // Monate sind 0-basiert in JavaScript
-      //var year = parseInt(parts[2], 10);
-      //var hours = parseInt(parts[3], 10);
-      //var minutes = parseInt(parts[4], 10);
-      //var seconds = parseInt(parts[5], 10);
-  //
-      //var dateObj = new Date(year, month, day, hours, minutes, seconds);
-      //var datetimeLocalFormat = dateObj.toISOString().slice(0, 16);
-      //console.log(datetimeLocalFormat);
-
       const date = new Date(card.schedule.next_review_at * 1000);
       nextReviewAtCell.textContent = date.toISOString().slice(0, 16);
       row.appendChild(nextReviewAtCell);
@@ -295,6 +283,8 @@ document.getElementById('cards-table').onclick = function(e) {
   tr.style.backgroundColor = 'lightgrey';
 };
 
+let originalQuestion;
+
 // Funktion, um das Modal zu öffnen
 async function openEditModal(index) {
   const { invoke } = window.__TAURI__.tauri;
@@ -318,19 +308,37 @@ function closeEditModal() {
 document.querySelector('.close-button').addEventListener('click', closeEditModal);
 
 // Event Listener für den Apply-Button des Modals
-document.getElementById('modal-apply-button').addEventListener('click', function() {
-  // Hier Logik für das Aktualisieren der Karte implementieren
-  // Sie können die Werte aus den Eingabefeldern holen und sie zurück in die Tabelle einfügen oder an den Server senden
+document.getElementById('modal-apply-button').addEventListener('click', async function() {
+  var newQuestion = document.getElementById('modal-question').value;
+  var newAnswer = document.getElementById('modal-answer').value;
+  var datetimeLocalStr = document.getElementById('modal-next-review-at').value;
+  var dateObj = new Date(datetimeLocalStr);
 
-  // Beispiel: Aktualisieren der Karte in der Tabelle
-  // const updatedCard = {
-  //   question: document.getElementById('modal-question').value,
-  //   answer: document.getElementById('modal-answer').value,
-  //   next_review_at: document.getElementById('modal-next-review-at').value
-  // };
-  // updateCardInTable(updatedCard);
+  // Prüfen, ob das Datum gültig ist
+  if (!isNaN(dateObj.getTime())) {
+      var secondsSinceEpoch = dateObj.getTime() / 1000;
+      
+      console.log(secondsSinceEpoch);
 
-  // Modal schließen
+      const { invoke } = window.__TAURI__.tauri;
+      await invoke('update_card', { deckName: document.getElementById('selected-deck').textContent, oldCardQuestion: originalQuestion,
+      newCardQuestion: newQuestion, cardAnswer: newAnswer, nextReviewAt: secondsSinceEpoch});
+
+      await updateCardsTable();
+  } else {
+      console.log('Das eingegebene Datum ist nicht gültig.');
+  }
+
+  closeEditModal();
+});
+
+document.getElementById('modal-delete-button').addEventListener('click', async function() {
+  deck_name = document.getElementById('selected-deck').textContent;
+  if (deck_name != '') {
+      const { invoke } = window.__TAURI__.tauri;
+      await invoke('delete_card', { deckName: deck_name, question: originalQuestion });
+      await updateCardsTable();
+  }
   closeEditModal();
 });
 
@@ -342,13 +350,13 @@ document.getElementById('cards-table').addEventListener('click', function(event)
   }
   if (target != null) {
     var cells = target.cells;
-    var question = cells[0].textContent;
+    originalQuestion = cells[0].textContent;
     var answer = cells[1].textContent;
     var nextReviewAt = cells[2].textContent;
 
     console.log(nextReviewAt);
   
-    document.getElementById('modal-question').value = question;
+    document.getElementById('modal-question').value = originalQuestion;
     document.getElementById('modal-answer').value = answer;
     document.getElementById('modal-next-review-at').value = nextReviewAt;
     

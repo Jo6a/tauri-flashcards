@@ -267,7 +267,18 @@ body.light-mode .modal-content {
   border-radius: 5px; /* Abgerundete Ecken */
 }
 
-/* Anpassungen für den Apply-Button im Modal */
+
+#modal-button-container {
+  display: flex; /* Flexbox-Container, um die Buttons in einer Reihe anzuzeigen */
+  justify-content: space-around; /* Verteilt die Buttons gleichmäßig im Container */
+  align-items: center; /* Zentriert die Buttons vertikal */
+  margin-top: 20px;
+}
+
+#modal-button-container button {
+  margin: 0 5px; /* Fügt einen kleinen Abstand zwischen den Buttons hinzu */
+}
+
 .modal-content button {
   background-color: #007BFF;
   color: white;
@@ -278,13 +289,11 @@ body.light-mode .modal-content {
   background-color: #0056b3;
 }
 
-/* Anpassungen für das Layout im Modal */
 .modal-content label {
   display: block;
   margin-top: 20px; /* Abstand über dem Label */
 }
 
-/* Anpassungen für Dark-Mode für Eingabefelder und Buttons im Modal */
 body.dark-mode .modal-content textarea,
 body.dark-mode .modal-content input,
 body.dark-mode .modal-content button {
@@ -293,7 +302,6 @@ body.dark-mode .modal-content button {
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
-/* Anpassungen für Light-Mode für Eingabefelder und Buttons im Modal */
 body.light-mode .modal-content textarea,
 body.light-mode .modal-content input,
 body.light-mode .modal-content button {

@@ -97,6 +97,13 @@ fn review_card(deck_name: String, card_question: String, difficulty: String) -> 
 }
 
 #[tauri::command]
+fn update_card(deck_name: String, old_card_question: String, new_card_question: String, card_answer: String, next_review_at : i64) -> Result<(), String> {
+    let app = APP.lock().unwrap();
+    app.update_card(&deck_name, &old_card_question, &new_card_question, &card_answer, next_review_at)
+        .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
 fn get_deckoptions(deck_name: String) -> (i64, f32) {
     let app = APP.lock().unwrap();
     match app.get_deckoptions(deck_name) {
@@ -179,6 +186,15 @@ fn add_card(
         initial_interval,
         initial_ease_factor,
     ) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.to_string()),
+    }
+}
+
+#[tauri::command]
+fn delete_card(deck_name: String, question: String) -> Result<(), String> {
+    let app = APP.lock().unwrap();
+    match app.delete_card(deck_name, question) {
         Ok(_) => Ok(()),
         Err(err) => Err(err.to_string()),
     }
@@ -297,6 +313,13 @@ impl App {
         }
     }
 
+    pub fn delete_card(&self, deck_name: String, question: String) -> Result<(), rusqlite::Error> {
+        self.conn
+            .execute("DELETE FROM cards WHERE deck_name = ?1 AND question = ?2", params![deck_name, question])?;
+
+        Ok(())
+    }
+
     pub fn load_decks(&self) -> Result<Vec<Deck>, rusqlite::Error> {
         let mut stmt = self
             .conn
@@ -391,6 +414,41 @@ impl App {
         Ok(())
     }
 
+    pub fn update_card(
+        &self,
+        deck_name: &str,
+        old_card_question: &str,
+        new_card_question: &str,
+        card_answer: &str,
+        next_review_at: i64,
+    ) -> rusqlite::Result<()> {
+
+        println!("{} {} {} {} {}", deck_name, old_card_question, new_card_question, card_answer, next_review_at);
+        let result = self.conn.execute(
+            "UPDATE cards SET question = ?1, answer = ?2, next_review_at = ?3 WHERE deck_name = ?4 AND question = ?5",
+            rusqlite::params![
+                new_card_question,
+                card_answer,
+                next_review_at,
+                deck_name,
+                old_card_question
+            ],
+        );
+        match result {
+            Ok(rows_updated) => {
+                println!("Rows updated: {}", rows_updated);
+                if rows_updated == 0 {
+                    println!("No rows were updated, check if the deck_name is correct and exists in the database.");
+                }
+                Ok(())
+            }
+            Err(e) => {
+                println!("Error updating deck options: {:?}", e);
+                Err(e)
+            }
+        }
+    }
+
     pub fn get_deckoptions(&self, deck_name: String) -> Result<(i64, f32), rusqlite::Error> {
         let mut stmt = self
             .conn
@@ -445,7 +503,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             add_deck,
             delete_deck,
             add_card,
+            delete_card,
             review_card,
+            update_card,
             get_deckoptions,
             set_deckoptions
         ])

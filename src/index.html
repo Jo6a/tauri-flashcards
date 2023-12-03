@@ -28,7 +28,7 @@
       <textarea id="text-field" readonly></textarea>
       <button id="show-button">Show solution</button>
       <textarea id="text-field-2"></textarea>
-      <div id="button-container"> <!-- Flex Container für die Buttons -->
+      <div id="button-container">
         <button id="wrong-button">Wrong</button>
         <button id="hard-button">Hard</button>
         <button id="good-button">Good</button>
@@ -66,7 +66,10 @@
         <textarea id="modal-answer"></textarea>
         <label for="modal-next-review-at">Next Review At:</label>
         <input type="datetime-local" id="modal-next-review-at">
-        <button id="modal-apply-button">Apply</button>
+        <div id="modal-button-container">
+          <button id="modal-apply-button">Apply</button>
+          <button id="modal-delete-button">Delete Card</button>
+        </div>
       </div>
     </div>
     <div id="options-view" style="display: none;">

@@ -192,10 +192,6 @@ select {
   padding: 8px;
 }
 
-#cards-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
 #cards-table tr:hover {
   background-color: #ddd;
 }

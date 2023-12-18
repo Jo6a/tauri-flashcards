@@ -1,4 +1,4 @@
-# tauri-flash 🚀
+# tauri-flashcards 🚀
 
 This project is a simple flashcard application built with Tauri, a framework for building lightweight, secure, and cross-platform desktop applications with web technologies.
 
@@ -20,3 +20,11 @@ This project is a simple flashcard application built with Tauri, a framework for
 1. Clone the repository.
 2. Navigate to the project directory.
 3. Run `cargo tauri dev` to start the application in development mode.
+
+## Contributing 🤝
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+
+## License 📄
+
+Distributed under the MIT License.

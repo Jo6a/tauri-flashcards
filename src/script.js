@@ -183,7 +183,7 @@ document.getElementById('menu-button').onclick = function() {
   async function updateCardsTable() {
     deck_text = document.getElementById('selected-deck').textContent;
     const tableBody = document.getElementById('cards-table').querySelector('tbody');
-    tableBody.innerHTML = ''; // Löscht den aktuellen Inhalt der Tabelle
+    tableBody.innerHTML = ''; // removes current content of the table
 
     const { invoke } = window.__TAURI__.tauri;
     const cards = await invoke('get_cards', { deckName: deck_text });
@@ -283,7 +283,6 @@ document.getElementById('cards-table').onclick = function(e) {
 
 let originalQuestion;
 
-// Funktion, um das Modal zu öffnen
 async function openEditModal(index) {
   const { invoke } = window.__TAURI__.tauri;
   const cards = await invoke('get_cards', { deckName: deck_text });
@@ -297,22 +296,18 @@ async function openEditModal(index) {
   document.getElementById('edit-card-modal').style.display = "block";
 }
 
-// Funktion, um das Modal zu schließen
 function closeEditModal() {
   document.getElementById('edit-card-modal').style.display = "none";
 }
 
-// Event Listener für den Schließen-Button des Modals
 document.querySelector('.close-button').addEventListener('click', closeEditModal);
 
-// Event Listener für den Apply-Button des Modals
 document.getElementById('modal-apply-button').addEventListener('click', async function() {
   var newQuestion = document.getElementById('modal-question').value;
   var newAnswer = document.getElementById('modal-answer').value;
   var datetimeLocalStr = document.getElementById('modal-next-review-at').value;
   var dateObj = new Date(datetimeLocalStr);
 
-  // Prüfen, ob das Datum gültig ist
   if (!isNaN(dateObj.getTime())) {
       var secondsSinceEpoch = dateObj.getTime() / 1000;
       
@@ -324,7 +319,7 @@ document.getElementById('modal-apply-button').addEventListener('click', async fu
 
       await updateCardsTable();
   } else {
-      console.log('Das eingegebene Datum ist nicht gültig.');
+      console.log('Inputed date is invalid.');
   }
 
   closeEditModal();
@@ -340,7 +335,6 @@ document.getElementById('modal-delete-button').addEventListener('click', async f
   closeEditModal();
 });
 
-// Event Listener, um das Modal zu öffnen, wenn auf eine Karte in der Tabelle geklickt wird
 document.getElementById('cards-table').addEventListener('click', function(event) {
   var target = event.target;
   while (target != null && target.nodeName !== 'TR') {
@@ -365,12 +359,10 @@ document.getElementById('cards-table').addEventListener('click', function(event)
   }
 });
 
-// Verhindern, dass das Modal geschlossen wird, wenn man innerhalb des Inhalts klickt
 document.querySelector('.modal-content').addEventListener('click', function(event) {
   event.stopPropagation();
 });
 
-// Schließen des Modals, wenn außerhalb des Inhalts geklickt wird
 window.addEventListener('click', function(event) {
   if (event.target == document.getElementById('edit-card-modal')) {
     closeEditModal();

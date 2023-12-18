@@ -3,9 +3,9 @@
 
 mod review;
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 use lazy_static::lazy_static;
-use review::{ReviewDifficulty, ReviewSchedule};
+use review::ReviewSchedule;
 use rusqlite::{params, Connection, Result};
 use std::sync::Mutex;
 
@@ -46,8 +46,6 @@ fn get_card(deck_name: String) -> (String, String) {
             {
                 return (oldest_card.question.clone(), oldest_card.answer.clone());
             }
-
-            //return (deck.cards[0].question.clone(), deck.cards[0].answer.clone());
         }
     }
     return ("Done".to_string(), "Done".to_string());
@@ -88,19 +86,31 @@ fn review_card(deck_name: String, card_question: String, difficulty: String) -> 
     let deck = &mut decks[deck_index];
     let card = &mut deck.cards[card_index];
 
-    println!("r11 {}", card.schedule.reviews_count);
+    println!("review_card1 {}", card.schedule.reviews_count);
     card.schedule.review(difficulty_enum);
-    println!("r12 {}", card.schedule.reviews_count);
+    println!("review_card2 {}", card.schedule.reviews_count);
 
     app.update_card_review_schedule(&deck.name, &card.question, &card.schedule)
         .map_err(|err| err.to_string())
 }
 
 #[tauri::command]
-fn update_card(deck_name: String, old_card_question: String, new_card_question: String, card_answer: String, next_review_at : i64) -> Result<(), String> {
+fn update_card(
+    deck_name: String,
+    old_card_question: String,
+    new_card_question: String,
+    card_answer: String,
+    next_review_at: i64,
+) -> Result<(), String> {
     let app = APP.lock().unwrap();
-    app.update_card(&deck_name, &old_card_question, &new_card_question, &card_answer, next_review_at)
-        .map_err(|err| err.to_string())
+    app.update_card(
+        &deck_name,
+        &old_card_question,
+        &new_card_question,
+        &card_answer,
+        next_review_at,
+    )
+    .map_err(|err| err.to_string())
 }
 
 #[tauri::command]
@@ -151,7 +161,7 @@ fn add_deck(
     initial_interval: i64,
     initial_ease_factor: f32,
 ) -> Result<(), String> {
-    println!("h1");
+    println!("add_deck1");
     let app = APP.lock().unwrap();
     match app.add_deck(deck_name, initial_interval, initial_ease_factor) {
         Ok(_) => Ok(()),
@@ -161,7 +171,7 @@ fn add_deck(
 
 #[tauri::command]
 fn delete_deck(deck_name: String) -> Result<(), String> {
-    println!("e1");
+    println!("delete_deck1");
     let app = APP.lock().unwrap();
     match app.delete_deck(deck_name) {
         Ok(_) => Ok(()),
@@ -177,7 +187,7 @@ fn add_card(
     initial_interval: i64,
     initial_ease_factor: f32,
 ) -> Result<(), String> {
-    println!("h2");
+    println!("add_card2");
     let app = APP.lock().unwrap();
     match app.add_card(
         deck_name,
@@ -314,8 +324,10 @@ impl App {
     }
 
     pub fn delete_card(&self, deck_name: String, question: String) -> Result<(), rusqlite::Error> {
-        self.conn
-            .execute("DELETE FROM cards WHERE deck_name = ?1 AND question = ?2", params![deck_name, question])?;
+        self.conn.execute(
+            "DELETE FROM cards WHERE deck_name = ?1 AND question = ?2",
+            params![deck_name, question],
+        )?;
 
         Ok(())
     }
@@ -422,8 +434,10 @@ impl App {
         card_answer: &str,
         next_review_at: i64,
     ) -> rusqlite::Result<()> {
-
-        println!("{} {} {} {} {}", deck_name, old_card_question, new_card_question, card_answer, next_review_at);
+        println!(
+            "update_card: {} {} {} {} {}",
+            deck_name, old_card_question, new_card_question, card_answer, next_review_at
+        );
         let result = self.conn.execute(
             "UPDATE cards SET question = ?1, answer = ?2, next_review_at = ?3 WHERE deck_name = ?4 AND question = ?5",
             rusqlite::params![

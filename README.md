@@ -1,6 +1,7 @@
 # tauri-flashcards 🚀
 
 This project is a simple flashcard application built with Tauri, a framework for building lightweight, secure, and cross-platform desktop applications with web technologies.
+![tauri-flashcards](https://github.com/Jo6a/tauri-flashcards/assets/18258350/6e5f3bc2-35a1-42ab-82ee-6ce0036325a4)
 
 ## Features 🌟
 - Create and manage decks of flashcards.
